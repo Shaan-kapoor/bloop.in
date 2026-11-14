@@ -1,0 +1,12 @@
+# Cloudflare Pages project: static game in public/, API in functions/.
+name = "bloop-in"
+pages_build_output_dir = "public"
+compatibility_date = "2025-09-01"
+
+# The shared board ("the deep"). Create the database once with
+#   npx wrangler d1 create bloop-in
+# and paste the id it prints below. Tables are created on first request.
+[[d1_databases]]
+binding = "DB"
+database_name = "bloop-in"
+database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
