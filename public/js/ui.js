@@ -115,7 +115,7 @@ const ui = {
     const isNew = u => u.depth && !S.seen[u.id], opened = UP.filter(open), locked = UP.filter(u => !open(u));
     for (const u of [...opened.filter(isNew), ...opened.filter(u => !isNew(u))]) {
       const el = document.createElement('button'); el.style.setProperty('--i', i++); el._new = isNew(u);
-      el.innerHTML = `<img class="ico" src="${ico(u.id)}" alt=""><span class="tx"><span class="nm">${u.name}${el._new ? '<i class="tag">new</i>' : ''}</span>${el._new ? `<span class="ds">${u.desc}</span>` : ''}<span class="fx"></span></span><span class="price"><i class="dot"></i><b></b></span>`;
+      el.innerHTML = `<img class="ico" src="${ico(u.id)}" alt=""><span class="tx"><span class="nm">${u.name}${el._new ? '<i class="tag">new</i>' : ''}</span><span class="fx"></span></span><span class="price"><i class="dot"></i><b></b></span>`;
       holdToBuy(el, u); tileEls[u.id] = el; box.appendChild(el);
     }
     if (locked.length) wide('locked', '', '? ? ?', `something new at depth ${locked[0].depth}`);
@@ -277,9 +277,31 @@ function cheat() {
 }
 $('cheatBtn').onclick = cheat; $('cheatIn').onkeydown = e => { if (e.key === 'Enter') cheat(); };
 
-// ── wordmark: the dot hops when you poke it ──
+// ── wordmark: it hops when you poke it ──
+// The goo wordmark as a still image for the menus: the same balls as the
+// title screen, shaded by the same rules as the game's renderer.
+let logoSrc = '';
+function logoImage() {
+  const W = 150, H = 46, ox = 75, oy = 31, c = document.createElement('canvas'), g = c.getContext('2d'); c.width = W; c.height = H;
+  const put = (x, y, r) => { const R = r * 1.85; g.drawImage(SPR[0], ox + x - R, oy + y - R, R * 2, R * 2); };
+  g.fillStyle = '#000'; g.fillRect(0, 0, W, H); g.globalCompositeOperation = 'lighter';
+  for (const p of LOGO.pts) put(p.x, p.y, p.r || 2.1);
+  put(LOGO.dot.x, LOGO.dot.y, 4.4);
+  const d = g.getImageData(0, 0, W, H).data, img = g.createImageData(W, H), o = new Uint32Array(img.data.buffer), P = PAL[0];
+  const v = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? 0 : d[(y * W + x) * 4];
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const a = v(x, y), i = y * W + x;
+    if (a < T) { if (v(x - 1, y) >= T || v(x + 1, y) >= T || v(x, y - 1) >= T || v(x, y + 1) >= T) o[i] = P[0]; continue; }
+    const gx = v(x + 2, y) - v(x - 2, y), gy = v(x, y + 2) - v(x, y - 2);
+    const b = (.6 * gx + .8 * gy) / (Math.hypot(gx, gy) + 20) + (BAY[(y & 3) << 2 | (x & 3)] / 16 - .5) * .28;
+    o[i] = P[b > .5 ? (a < T + 40 ? 5 : a < T + 105 ? 4 : 3) : b > .12 ? (a < T + 55 ? 4 : 3) : b < -.45 ? (a < T + 80 ? 1 : 3) : b < -.1 && a < T + 30 ? 1 : a >= 253 ? 2 : 3];
+  }
+  g.globalCompositeOperation = 'source-over'; g.putImageData(img, 0, 0);
+  const ex = Math.round(ox + LOGO.dot.x), ey = Math.round(oy + LOGO.dot.y - 1.5); g.fillStyle = '#0a1a52'; g.fillRect(ex - 2, ey, 1, 2); g.fillRect(ex + 1, ey, 1, 2);   // Bloop's eyes
+  return c.toDataURL();
+}
 function logoInto(el) {
-  el.innerHTML = 'bloop<i></i>in'; let n = 0;
+  el.innerHTML = `<img src="${logoSrc || (logoSrc = logoImage())}" alt="bloop.in">`; let n = 0;
   el.onpointerdown = e => { e.stopPropagation(); initAudio(); rebump(el, 'hop'); sfx.letter(n++ % 8); buzz(6); };
 }
 ['logoSm', 'logoCr'].forEach(id => logoInto($(id)));
