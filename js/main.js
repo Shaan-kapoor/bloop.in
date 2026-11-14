@@ -18,6 +18,7 @@ cv.addEventListener('pointerup', e => {
 });
 cv.addEventListener('pointercancel', () => { aim = null; aimId = null; held = false; });
 document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('touchstart', () => {}, { passive: true });   // lets :active press states show on iOS
 document.addEventListener('visibilitychange', () => { last = performance.now(); if (ac) document.hidden ? ac.suspend() : ac.resume(); });
 
 // ══════════════════════════ loop ══════════════════════════

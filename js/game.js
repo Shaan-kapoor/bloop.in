@@ -4,6 +4,7 @@ const SAVE = 'bloopin.save.v2';
 let S = { goo: 0, layer: 1, deep: 1, best: 0, rounds: 0, pearls: 0, read: 0, hearts: 0, intro: 0, id: '', name: '', up: {}, seen: {}, sure: {} };
 if (!BOT) try { const j = JSON.parse(localStorage.getItem(SAVE)); if (j && j.up) S = Object.assign(S, j); opt = Object.assign(opt, S.opt); } catch (_) {}
 S.deep = Math.max(S.deep || 1, S.layer);
+if (S.rounds > 0) S.intro = 1;   // anyone who has already played keeps their dive and skips the opening
 const save = () => { if (BOT) return; try { S.opt = opt; localStorage.setItem(SAVE, JSON.stringify(S)); } catch (_) {} };
 const lv = id => S.up[id] || 0;
 

@@ -15,7 +15,7 @@ function burst(el, n = 9, cls = '') {
   }
 }
 function countUp(el, to, pre = '') {
-  const t0 = performance.now(); const step = t => { const k = Math.min(1, (t - t0) / 650); el.textContent = pre + fmt(to * (1 - (1 - k) ** 3)); if (k < 1 && el.isConnected) requestAnimationFrame(step); };
+  const t0 = performance.now(); const step = t => { const k = clamp((t - t0) / 650, 0, 1); el.textContent = pre + fmt(to * (1 - (1 - k) ** 3)); if (k < 1 && el.isConnected) requestAnimationFrame(step); };
   step(t0);
 }
 
@@ -143,7 +143,7 @@ const ui = {
 // purchases show up on the waiting board at once
 function buy(u) {
   const c = cost(u);
-  if (!open(u) || lv(u.id) >= u.max || S.goo < c) { sfx.deny(); if (tileEls[u.id]) rebump(tileEls[u.id], 'no'); return false; }
+  if (!open(u) || lv(u.id) >= u.max || S.goo < c) { sfx.deny(); buzz([6, 40, 6]); if (tileEls[u.id]) rebump(tileEls[u.id], 'no'); return false; }
   S.goo -= c; S.up[u.id] = lv(u.id) + 1;
   const plain = R.pods.filter(p => !p.dead && !p.type), pick = () => plain[Math.random() * plain.length | 0];
   if (u.id === 'power') for (const p of R.pods) p.sv += 10 + Math.random() * 6;
@@ -153,7 +153,8 @@ function buy(u) {
   if (u.id === 'drops') R.left = maxDrops();
   const t = performance.now(); streak = t - lastBuy < 2500 ? streak + 1 : 0; lastBuy = t;
   save(); sfx.buy(streak); buzz(12);
-  if (!BOT) { if (tileEls[u.id]) fly($('goo'), tileEls[u.id].querySelector('.price')); ui.refresh(u.id); ui.pips(); }
+  if (!BOT) { if (tileEls[u.id]) fly($('goo'), tileEls[u.id].querySelector('.price')); ui.refresh(u.id); ui.pips(); rebump($('goo'), 'bump');
+    if (lv(u.id) >= u.max && tileEls[u.id]) { arpeggio(8, 5, 60); burst(tileEls[u.id], 12); buzz([15, 30, 40]); } }   // maxing one out is an event
   return true;
 }
 $('go').onclick = () => { initAudio(); $('sheet').classList.remove('open'); startPlay(); sfx.tap(); sfx.sheet(false); };
@@ -229,6 +230,7 @@ document.querySelectorAll('.sw').forEach(b => b.onclick = () => {
   const k = b.dataset.opt; opt[k] = !opt[k]; b.classList.toggle('on', opt[k]); initAudio(); applyOpt(); save();
   sfx.flick(opt[k]); if (k === 'buzz' && opt.buzz) buzz(30);
 });
+document.querySelectorAll('.row').forEach(r => { const sw = r.querySelector('.sw'); if (sw) r.onclick = e => { if (e.target !== sw) sw.click(); }; });   // the whole row is the switch
 $('nameIn').onchange = () => { S.name = $('nameIn').value.replace(/[^\p{L}\p{N} _.\-]/gu, '').trim().slice(0, 14); $('nameIn').value = me().name; save(); world = null; netDive(true); };
 
 // save codes: the whole save as one line of text
