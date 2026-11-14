@@ -10,7 +10,7 @@
 <title>bloop.in</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7' fill='%233f8cff'/><circle cx='5.5' cy='5.5' r='2' fill='%23b8e6ff'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -44,7 +44,7 @@
 
   <!-- menu: notes, the deep, settings -->
   <div id="menu">
-    <div class="mh"><span class="logo sm" id="logoSm"></span><button id="menuX" class="pill" aria-label="close">×</button></div>
+    <div class="mh"><span class="logo sm" id="logoSm"></span><button id="menuX" aria-label="close">×</button></div>
     <div class="tabs"><button data-tab="Notes">notes</button><button data-tab="Deep">the deep</button><button data-tab="Set">settings</button><i id="tabInk"></i></div>
     <div class="pane" id="tabNotes"></div>
     <div class="pane" id="tabDeep"></div>
@@ -57,7 +57,7 @@
       <p class="hintp">your dive saves itself on this device. a save code lets you carry it to another one.</p>
       <textarea id="saveBox" rows="2" placeholder="paste a save code here" spellcheck="false"></textarea>
       <div class="btns"><button id="expBtn" class="btn">copy my save</button><button id="impBtn" class="btn">load this code</button></div>
-      <div class="btns"><button id="introBtn" class="btn ghost">watch the intro</button><button id="wipeBtn" class="btn ghost danger">erase everything</button></div>
+      <div class="btns"><button id="introBtn" class="btn ghost">replay intro</button><button id="wipeBtn" class="btn ghost danger">erase all</button></div>
       <div id="credits">
         <span class="logo sm" id="logoCr"></span>
         <p>made by <b>SHAAN</b> with <button id="heart" aria-label="love">♥</button></p>
@@ -67,7 +67,7 @@
   </div>
 
   <!-- a note from a bottle -->
-  <div id="note"><div class="paper"><small id="noteN"></small><p id="noteT"></p><i class="sig">n</i><button id="noteOk" class="btn">keep it</button></div></div>
+  <div id="note"><div class="paper"><small id="noteN"></small><p id="noteT"></p><i class="sig">n</i><button id="noteOk" class="btn">keep</button></div></div>
 
   <!-- intro captions -->
   <div id="story"><p id="cap"></p><button id="skip" class="pill">skip</button></div>
@@ -78,7 +78,7 @@
     <p class="sub">a small drop. a long way down.</p>
     <p class="where" id="where"></p>
     <button id="diveBtn">tap to dive</button>
-    <p class="who">made with ♥ by shaan</p>
+    <p class="who">made by shaan</p>
   </div>
 </div></div>
 <pre id="botlog"></pre>

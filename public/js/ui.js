@@ -9,7 +9,7 @@ let shownGoo = 0, theme = -1, lastDepth = 0, tileEls = {};
 function burst(el, n = 9, cls = '') {
   if (BOT) return; const host = el.closest('#sheet, #menu, #title') || stage, a = el.getBoundingClientRect(), h = host.getBoundingClientRect();
   for (let i = 0; i < n; i++) {
-    const s = document.createElement('i'), ang = rnd(0, TAU), d = rnd(16, 44); s.className = 'spark ' + cls; if (cls === 'h') s.textContent = '♥';
+    const s = document.createElement('i'), ang = rnd(0, TAU), d = rnd(12, 30); s.className = 'spark ' + cls; if (cls === 'h') s.textContent = '♥';
     s.style.cssText = `left:${a.left - h.left + a.width / 2}px;top:${a.top - h.top + a.height / 2}px;--dx:calc(var(--u)*${(Math.cos(ang) * d).toFixed(1)});--dy:calc(var(--u)*${(Math.sin(ang) * d - 12).toFixed(1)})`;
     s.onanimationend = () => s.remove(); host.appendChild(s);
   }
@@ -54,11 +54,20 @@ function zoneBanner() {
   if (BOT || stage.classList.contains('cine')) return;
   $('zone').innerHTML = `<small>depth ${S.layer}</small>${ZONES[theme]}`; rebump($('zone'), 'on'); sfx.zone();
 }
+// "3 drops" and "4 drops" read better as "3 → 4 drops"
+function fxPair(a, b) {
+  const x = a.split(' '), y = b.split(' ');
+  if (x.length === y.length && x.length > 1) {
+    if (x.slice(1).join(' ') === y.slice(1).join(' ')) return [x[0], b];
+    if (x.slice(0, -1).join(' ') === y.slice(0, -1).join(' ')) return [a, y[y.length - 1]];
+  }
+  return [a, b];
+}
 const ui = {
   round() {
     if (BOT) return;
     const th = (S.layer - 1) % THEMES.length; if (th !== theme) { theme = th; setTheme(th); }
-    $('depth').textContent = 'depth ' + S.layer + (S.pearls ? ' · ' + S.pearls + '◦' : '');
+    $('depth').textContent = 'depth ' + String(S.layer).padStart(2, '0') + (S.pearls ? ' · ' + S.pearls + '◦' : '');
     if (S.layer !== lastDepth) { if (lastDepth) { rebump($('depth'), 'flip'); zoneBanner(); } lastDepth = S.layer; }
     this.pips(); this.bar(); this.combo();
     if (S.rounds === 0) { $('hint').textContent = 'drag to aim, let go to drop'; $('hint').classList.add('on'); }
@@ -103,10 +112,10 @@ const ui = {
       const l = lv(u.id), c = cost(u), maxed = l >= u.max, can = !maxed && S.goo >= c;
       el.className = `tile ${u.cat} ${maxed ? 'maxed' : can ? 'can' : 'poor'}${el._new ? ' fresh' : ''}`;
       el.querySelector('.lv').innerHTML = u.max <= 7 ? Array.from({ length: u.max }, (_, k) => `<i class="${k < l ? 'f' : ''}"></i>`).join('') : 'lv ' + l;
-      el.querySelector('.fx').innerHTML = maxed ? `<b>${u.fx(l)}</b>` : `${u.fx(l)}<i>›</i><b>${u.fx(l + 1)}</b>`;
+      const [a, b] = fxPair(u.fx(l), u.fx(l + 1)); el.querySelector('.fx').innerHTML = maxed ? `<b>${u.fx(l)}</b>` : `${a}<i>→</i><b>${b}</b>`;
       el.querySelector('.price b').textContent = maxed ? 'max' : fmt(c);
       el.style.setProperty('--p', maxed ? '100%' : Math.min(100, S.goo / c * 100) + '%');
-      if (u.id === boughtId) { rebump(el, 'pop'); burst(el); }
+      if (u.id === boughtId) { rebump(el, 'hit'); burst(el, 6); }
     }
   },
 };
@@ -131,9 +140,10 @@ $('shopBtn').onclick = () => { initAudio(); if (R.state !== 'play' || R.shots) r
 let typing = 0, noteIdx = 0;
 function openNote(i) {
   noteIdx = i; const text = NOTES[i], el = $('noteT'); let k = 0;
-  $('noteN').textContent = `note ${i + 1} of ${NOTES.length}`; el.textContent = ''; $('note').classList.add('on'); sfx.paper();
-  clearInterval(typing); typing = setInterval(() => { k++; el.textContent = text.slice(0, k); if (k % 2 === 0) sfx.type(); if (k >= text.length) clearInterval(typing); }, 26);
-  el.onclick = () => { clearInterval(typing); el.textContent = text; };
+  const stop = () => { clearInterval(typing); el.textContent = text; el.classList.remove('typing'); };
+  $('noteN').textContent = `note ${String(i + 1).padStart(2, '0')} / ${NOTES.length}`; el.textContent = ''; el.classList.add('typing'); $('note').classList.add('on'); sfx.paper();
+  clearInterval(typing); typing = setInterval(() => { k++; el.textContent = text.slice(0, k); if (k % 2 === 0) sfx.type(); if (k >= text.length) stop(); }, 26);
+  el.onclick = stop;
 }
 $('noteOk').onclick = () => {
   clearInterval(typing); $('note').classList.remove('on'); sfx.tap();
@@ -144,7 +154,7 @@ $('noteOk').onclick = () => {
 function renderNotes() {
   const n = notesOpen(), el = $('tabNotes');
   el.innerHTML = `<p class="sum"><b>${n}</b> of ${NOTES.length} bottles found</p>` + NOTES.map((t, i) => i < n
-    ? `<button class="nt${i >= S.read ? ' new' : ''}" data-i="${i}"><b>${i + 1}</b><span>${i >= S.read ? 'a new note. tap to read it.' : t}</span></button>`
+    ? `<button class="nt${i === S.read ? ' new' : i > S.read ? ' lock' : ''}" data-i="${i}"><b>${i + 1}</b><span>${i === S.read ? 'a new note. tap to read it.' : i > S.read ? 'unread' : t}</span></button>`
     : `<div class="nt lock"><b>${i + 1}</b><span>· · ·${i === n ? ' &nbsp;clear depth ' + (i + 1) : ''}</span></div>`).join('');
   el.querySelectorAll('button').forEach(b => b.onclick = () => openNote(Math.min(+b.dataset.i, S.read)));
 }
@@ -220,13 +230,12 @@ $('impBtn').onclick = () => {
 $('introBtn').onclick = () => { S.intro = 0; save(); location.reload(); };
 $('wipeBtn').onclick = () => { if (confirm('Erase all progress? This cannot be undone.')) { try { localStorage.removeItem(SAVE); } catch (_) {} location.reload(); } };
 const heartLine = n => `${n} ♥ sent` + (n >= 100 ? '. the moon noticed.' : n >= 50 ? ". that's a lot of love." : n >= 10 ? '. bloop feels it.' : '');
-$('heart').onclick = () => { S.hearts++; save(); rebump($('heart'), 'pop'); burst($('heart'), 6, 'h'); sfx.heart(S.hearts); buzz(10); $('hearts').textContent = heartLine(S.hearts); };
+$('heart').onclick = () => { S.hearts++; save(); rebump($('heart'), 'hit'); burst($('heart'), 5, 'h'); sfx.heart(S.hearts); buzz(10); $('hearts').textContent = heartLine(S.hearts); };
 
-// ── logo: every letter hops when you poke it ──
+// ── wordmark: the dot hops when you poke it ──
 function logoInto(el) {
-  el.innerHTML = ['b', 'l', 'o', 'o', 'p', '.', 'i', 'n'].map((c, i) => `<b style="--i:${i}"${c === 'o' ? ' class="o"' : c === '.' ? ' class="pt"' : ''}>${c === 'o' || c === '.' ? '' : c}</b>`).join('');
-  el.classList.add('in'); setTimeout(() => el.classList.remove('in'), 2200);
-  el.querySelectorAll('b').forEach((b, i) => b.onpointerdown = e => { e.stopPropagation(); initAudio(); rebump(b, 'hop'); sfx.letter(i); buzz(6); });
+  el.innerHTML = 'bloop<i></i>in'; let n = 0;
+  el.onpointerdown = e => { e.stopPropagation(); initAudio(); rebump(el, 'hop'); sfx.letter(n++ % 8); buzz(6); };
 }
 ['logoBig', 'logoSm', 'logoCr'].forEach(id => logoInto($(id)));
 
@@ -237,12 +246,12 @@ function enterGame() {
 }
 function showTitle() {
   $('where').textContent = S.rounds ? `depth ${S.layer}` + (S.pearls ? ` · ${S.pearls} pearl${S.pearls > 1 ? 's' : ''}` : '') : '';
-  $('diveBtn').textContent = S.rounds ? 'tap to dive back in' : 'tap to dive';
+  $('diveBtn').textContent = S.rounds ? 'tap to continue' : 'tap to begin';
   let gone = false;
   $('title').onclick = () => {
     if (gone) return; gone = true; initAudio();
-    $('logoBig').classList.add('fall'); for (let i = 0; i < 8; i++) setTimeout(() => sfx.letter(7 - i), i * 55);
-    setTimeout(() => { $('title').classList.add('off'); S.intro ? enterGame() : runIntro(); }, 620);
+    $('logoBig').classList.add('fall'); sfx.fire(); setTimeout(() => sfx.sink(GW / 2, true), 520);   // the dot drips off the name
+    setTimeout(() => { $('title').classList.add('off'); S.intro ? enterGame() : runIntro(); }, 650);
   };
 }
 // The opening: a drip wakes up at the tap. It ends by handing the first round to the player.
