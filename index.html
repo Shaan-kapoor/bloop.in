@@ -2,136 +2,184 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#07081a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
 <title>bloop.in</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#07081a; --panel:#101133; --line:#262258; --ink:#f4ecd8; --dim:#6f6aa8; --blue:#3f8cff; --sky:#b8e6ff; --navy:#0a1a52; }
-  * { box-sizing:border-box; }
-  body { margin:0; background:var(--bg); color:var(--ink); font:16px/1.35 'Pixelify Sans',ui-monospace,Menlo,monospace;
-         display:flex; flex-direction:column; align-items:center; gap:12px; padding:16px 8px; min-height:100vh;
-         user-select:none; -webkit-user-select:none; }
-  h1 { margin:0; font-size:26px; font-weight:600; letter-spacing:.06em; }
-  h1 i { display:inline-block; width:.42em; height:.42em; margin:0 .06em; border-radius:50%; background:var(--blue);
-         box-shadow:inset -2px -2px 0 #1f47c9, inset 2px 2px 0 var(--sky), 0 0 0 2px var(--navy); }
-  nav { display:flex; gap:8px; }
-  button { font:inherit; color:var(--ink); background:var(--panel); border:2px solid var(--line); border-radius:6px;
-           padding:5px 12px; cursor:pointer; text-align:left; box-shadow:0 3px 0 #04051a; transition:transform .05s, border-color .1s; }
-  button:hover:not(:disabled) { border-color:var(--blue); }
-  button:active:not(:disabled) { transform:translateY(3px); box-shadow:none; }
-  button:disabled { color:var(--dim); cursor:default; }
-  nav button.on { background:var(--blue); color:#06103a; border-color:var(--sky); }
-  #stage { position:relative; width:min(96vw,1000px); aspect-ratio:16/10; }
-  canvas { width:100%; height:100%; display:block; image-rendering:pixelated; border:3px solid var(--line);
-           border-radius:10px; cursor:crosshair; touch-action:none; box-shadow:0 0 0 3px #04051a, 0 12px 40px #0008; }
-  #hud { position:absolute; top:12px; left:16px; pointer-events:none; text-shadow:2px 2px 0 #07081a; }
-  #goo { font-size:30px; font-weight:600; display:flex; align-items:center; gap:8px; }
-  #goo::before { content:''; width:16px; height:16px; border-radius:50%; background:var(--blue);
-                 box-shadow:inset -3px -3px 0 #1f47c9, inset 3px 3px 0 var(--sky), 0 0 0 2px var(--navy); }
-  #sub { color:var(--sky); font-size:15px; white-space:pre; }
-  #shop { position:absolute; top:12px; right:12px; display:flex; flex-direction:column; gap:7px; align-items:stretch; }
-  #shop button { font-size:14px; background:#101133e8; display:flex; justify-content:space-between; gap:14px; }
-  #shop button:not(:disabled) { border-color:#3f8cff; color:#fff; }
-  #shop button b { font-weight:600; color:var(--sky); }
-  #shop button:disabled b { color:var(--dim); }
-  .pop { position:absolute; pointer-events:none; font-weight:600; font-size:17px; color:var(--sky); text-shadow:2px 2px 0 #07081a;
-         transform:translate(-50%,-50%); animation:pop .9s cubic-bezier(.2,.9,.3,1) forwards; }
-  @keyframes pop { 0%{opacity:0; margin-top:6px; scale:.5} 15%{opacity:1; scale:1.25} 30%{scale:1} 100%{opacity:0; margin-top:-34px} }
-  #hint { color:var(--dim); max-width:min(96vw,760px); text-align:center; min-height:2.8em; font-size:15px; }
+  :root { --u:2px; --bg:#07081a; --panel:#101133; --line:#262258; --ink:#f4ecd8; --dim:#7d78b8; --blue:#3f8cff; --sky:#b8e6ff; --navy:#0a1a52; --gold:#ffc944; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { height:100%; margin:0; overflow:hidden; overscroll-behavior:none; background:var(--bg); }
+  body { color:var(--ink); font:calc(var(--u)*8)/1.25 'Pixelify Sans',ui-monospace,Menlo,monospace;
+         user-select:none; -webkit-user-select:none; -webkit-touch-callout:none; touch-action:none; }
+  #app { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; }
+  #stage { position:relative; overflow:hidden; background:#0d0e2b; }
+  canvas { position:absolute; inset:0; width:100%; height:100%; display:block; image-rendering:crisp-edges; image-rendering:pixelated; }
+  .ui { position:absolute; pointer-events:none; text-shadow:calc(var(--u)*.6) calc(var(--u)*.6) 0 #07081a; }
+
+  #hud { left:0; right:0; top:0; padding:calc(env(safe-area-inset-top) + var(--u)*4) calc(var(--u)*6) 0; display:flex; justify-content:space-between; align-items:flex-start; }
+  #goo { font-size:calc(var(--u)*15); font-weight:600; display:flex; align-items:center; gap:calc(var(--u)*3); line-height:1; }
+  #goo::before, .dot { content:''; display:inline-block; width:calc(var(--u)*8); height:calc(var(--u)*8); border-radius:50%; background:var(--blue);
+     box-shadow:inset calc(var(--u)*-1.2) calc(var(--u)*-1.2) 0 #1f47c9, inset calc(var(--u)*1.2) calc(var(--u)*1.2) 0 var(--sky), 0 0 0 var(--u) var(--navy); }
+  #right { display:flex; align-items:center; gap:calc(var(--u)*4); color:var(--sky); }
+  #mute { pointer-events:auto; font:inherit; color:var(--sky); background:#101133cc; border:var(--u) solid var(--line); border-radius:calc(var(--u)*3);
+          width:calc(var(--u)*17); height:calc(var(--u)*17); padding:0; }
+  #bar { left:calc(var(--u)*6); right:calc(var(--u)*6); top:calc(env(safe-area-inset-top) + var(--u)*25); height:calc(var(--u)*3); background:#0a0b22; border-radius:99px; overflow:hidden; box-shadow:0 0 0 var(--u) var(--line); }
+  #bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,#7a66ea,#b8e6ff); transition:width .25s; }
+  #pips { left:calc(var(--u)*7); right:55%; top:calc(env(safe-area-inset-top) + var(--u)*33); display:flex; flex-wrap:wrap; justify-content:flex-start; gap:calc(var(--u)*2.5); }
+  #pips .dot { width:calc(var(--u)*5); height:calc(var(--u)*5); transition:transform .2s, opacity .2s; }
+  #pips .dot.used { opacity:.18; transform:scale(.6); }
+  #combo { right:calc(var(--u)*8); top:26%; font-size:calc(var(--u)*20); font-weight:600; color:#fff; opacity:0; transition:opacity .4s; text-align:right; line-height:.9; }
+  #combo small { display:block; font-size:calc(var(--u)*7); color:var(--sky); font-weight:400; }
+  #combo.on { opacity:.9; } #combo.bump { animation:bump .18s; }
+  @keyframes bump { 0%{transform:scale(1.5)} 100%{transform:scale(1)} }
+  #hint { left:0; right:0; top:40%; text-align:center; font-size:calc(var(--u)*10); color:#fff; opacity:0; transition:opacity .4s; white-space:pre-line; }
+  #hint.on { opacity:1; animation:float 1.6s ease-in-out infinite; }
+  @keyframes float { 50% { transform:translateY(calc(var(--u)*-3)); } }
+  #toast { left:0; right:0; top:34%; text-align:center; font-size:calc(var(--u)*17); font-weight:600; color:var(--gold); opacity:0; line-height:1; white-space:pre-line; }
+  #toast.on { animation:toast 2.2s cubic-bezier(.2,1.6,.4,1) forwards; }
+  @keyframes toast { 0%{opacity:0; transform:scale(.3)} 12%{opacity:1; transform:scale(1)} 80%{opacity:1} 100%{opacity:0; transform:scale(1.1)} }
+  .pop { position:absolute; pointer-events:none; font-weight:600; font-size:calc(var(--u)*9); color:var(--sky); text-shadow:var(--u) var(--u) 0 #07081a;
+         transform:translate(-50%,-50%); animation:pop .9s cubic-bezier(.2,.9,.3,1) forwards; white-space:nowrap; }
+  .pop.gold { color:var(--gold); font-size:calc(var(--u)*11); } .pop.big { color:#fff; font-size:calc(var(--u)*13); }
+  @keyframes pop { 0%{opacity:0; margin-top:calc(var(--u)*3); scale:.5} 15%{opacity:1; scale:1.25} 30%{scale:1} 100%{opacity:0; margin-top:calc(var(--u)*-16)} }
+
+  /* upgrade sheet: slides up from the bottom, everything within thumb reach */
+  #sheet { position:absolute; left:0; right:0; bottom:0; height:68%; display:flex; flex-direction:column; background:#0b0c26f2; border-top:calc(var(--u)*1.5) solid var(--line);
+           border-radius:calc(var(--u)*8) calc(var(--u)*8) 0 0; transform:translateY(102%); transition:transform .28s cubic-bezier(.2,.9,.3,1); pointer-events:auto; touch-action:pan-y; }
+  #sheet.open { transform:none; }
+  #res { padding:calc(var(--u)*6) calc(var(--u)*8) calc(var(--u)*3); display:flex; justify-content:space-between; align-items:baseline; gap:calc(var(--u)*4); }
+  #res b { font-size:calc(var(--u)*14); color:var(--sky); } #res span { color:var(--dim); text-align:right; font-size:calc(var(--u)*7.5); }
+  #cards { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; padding:calc(var(--u)*2) calc(var(--u)*6) calc(var(--u)*4); display:flex; flex-direction:column; gap:calc(var(--u)*3); touch-action:pan-y; }
+  .card { display:flex; align-items:center; gap:calc(var(--u)*4); background:var(--panel); border:var(--u) solid var(--line); border-radius:calc(var(--u)*4);
+          padding:calc(var(--u)*3.5) calc(var(--u)*4); min-height:calc(var(--u)*30); }
+  .card .t { flex:1; min-width:0; } .card .n { font-weight:600; font-size:calc(var(--u)*9); display:flex; align-items:center; gap:calc(var(--u)*3); }
+  .card .d { color:var(--dim); font-size:calc(var(--u)*7); line-height:1.15; margin-top:calc(var(--u)*.8); }
+  .pipr { display:inline-flex; gap:calc(var(--u)*.9); } .pipr i { width:calc(var(--u)*2.4); height:calc(var(--u)*2.4); border-radius:50%; background:#262258; } .pipr i.f { background:var(--blue); }
+  .card button { font:inherit; font-weight:600; color:#06103a; background:var(--blue); border:0; border-radius:calc(var(--u)*3); min-width:calc(var(--u)*34); height:calc(var(--u)*22);
+                 padding:0 calc(var(--u)*4); box-shadow:0 calc(var(--u)*1.5) 0 #1f47c9; }
+  .card button:active { transform:translateY(calc(var(--u)*1.5)); box-shadow:none; }
+  .card.poor button { background:#1b1b4a; color:var(--dim); box-shadow:0 calc(var(--u)*1.5) 0 #0a0b22; }
+  .card.maxed button { background:none; color:var(--gold); box-shadow:none; }
+  .card.can { border-color:var(--blue); }
+  .card.locked { opacity:.5; border-style:dashed; } .card.locked .n { color:var(--dim); }
+  .card.fresh { animation:fresh .6s; } .card.bought { animation:bought .35s; }
+  @keyframes fresh { 0%{transform:scale(.8); border-color:#fff} 60%{transform:scale(1.04)} }
+  @keyframes bought { 30%{transform:scale(1.05); background:#1f47c9} }
+  .tag { font-size:calc(var(--u)*6); font-weight:600; color:#06103a; background:var(--gold); border-radius:99px; padding:0 calc(var(--u)*2.5); }
+  #foot { padding:calc(var(--u)*4) calc(var(--u)*6) calc(env(safe-area-inset-bottom) + var(--u)*5); display:flex; gap:calc(var(--u)*4); align-items:center; }
+  #go { flex:1; font:inherit; font-size:calc(var(--u)*13); font-weight:600; color:#06103a; background:var(--sky); border:0; border-radius:calc(var(--u)*5); height:calc(var(--u)*30);
+        box-shadow:0 calc(var(--u)*2) 0 var(--blue); }
+  #go:active { transform:translateY(calc(var(--u)*2)); box-shadow:none; }
+  #reset { font:inherit; font-size:calc(var(--u)*6.5); color:var(--dim); background:none; border:0; padding:calc(var(--u)*4) 0; }
+  #botlog { display:none; }
 </style>
 </head>
 <body>
-<h1>bloop<i></i>in</h1>
-<nav id="tabs"></nav>
-<div id="stage">
+<div id="app"><div id="stage">
   <canvas id="c"></canvas>
-  <div id="hud"><div id="goo"></div><div id="sub"></div></div>
-  <div id="shop"></div>
-</div>
-<div id="hint"></div>
+  <div id="bar" class="ui"><i></i></div>
+  <div id="hud" class="ui"><div id="goo">0</div><div id="right"><span id="depth"></span><button id="mute" aria-label="sound">♪</button></div></div>
+  <div id="pips" class="ui"></div>
+  <div id="combo" class="ui"></div>
+  <div id="hint" class="ui"></div>
+  <div id="toast" class="ui"></div>
+  <div id="sheet">
+    <div id="res"><b></b><span></span></div>
+    <div id="cards"></div>
+    <div id="foot"><button id="go">DROP ▸</button><button id="reset">reset</button></div>
+  </div>
+</div></div>
+<pre id="botlog"></pre>
 
 <script>
-// ══════════════════════════ goo renderer ══════════════════════════
-// Goo is splatted additively into a small offscreen field (one colour channel
-// per goo type). Each pixel is then shaded from the field's value and slope:
-// outline, rim light, shade, deep core and a specular glint, with ordered
-// dither between tones. Everything gloopy on screen goes through ball()/slab().
-const W = 384, H = 240, T = 128, TAU = Math.PI * 2, W4 = W * 4;
-const cv = document.getElementById('c'); cv.width = W; cv.height = H;
-const ctx = cv.getContext('2d');
-const fc = document.createElement('canvas'); fc.width = W; fc.height = H;
-const f = fc.getContext('2d', { willReadFrequently: true });
+'use strict';
+// ══════════════════════════ screen ══════════════════════════
+// Portrait-first. The game is drawn 180 logical pixels wide and as tall as
+// the phone allows; all DOM UI is sized in the same logical unit (--u).
+const $ = id => document.getElementById(id);
+const GW = 180, W4 = GW * 4, T = 128, TAU = Math.PI * 2;
+let GH = 340;
+const cv = $('c'), ctx = cv.getContext('2d');
+const fc = document.createElement('canvas'), f = fc.getContext('2d', { willReadFrequently: true });
+let out, o32, bgBuf, bgSh, surfArr = new Float32Array(GW);
 
+function fit() {
+  const vw = innerWidth, vh = innerHeight, ratio = Math.max(1.6, Math.min(2.2, vh / vw));
+  const w = Math.min(vw, vh / ratio), h = w * ratio, st = $('stage');
+  st.style.width = w + 'px'; st.style.height = h + 'px';
+  document.documentElement.style.setProperty('--u', w / GW + 'px');
+  const gh = Math.round(GW * ratio);
+  if (gh !== GH || !out) { GH = gh; cv.width = fc.width = GW; cv.height = fc.height = GH; out = ctx.createImageData(GW, GH); o32 = new Uint32Array(out.data.buffer); buildBg(); return true; }
+}
+
+// ══════════════════════════ goo renderer ══════════════════════════
+// Goo is splatted additively into an offscreen field (one colour channel per
+// goo type), then every pixel is shaded from the field's value and slope:
+// outline, rim light, shade, deep core, glint, with ordered dither.
 function sprite(rgb) {
   const s = document.createElement('canvas'); s.width = s.height = 64;
   const g = s.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
   for (let i = 0; i <= 12; i++) { const t = i / 12; gr.addColorStop(t, `rgba(${rgb},${(1 - t * t) ** 2})`); }
   g.fillStyle = gr; g.fillRect(0, 0, 64, 64); return s;
 }
-const SPR = [sprite('255,0,0'), sprite('0,255,0'), sprite('0,0,255')];
-const SOLID = ['#f00', '#0f0', '#00f'];
-// r = visible radius of a lone ball; ch = goo type (0 blue, 1 coral, 2 gold)
+const SPR = [sprite('255,0,0'), sprite('0,255,0'), sprite('0,0,255')], SOLID = ['#f00', '#0f0', '#00f'];
+// ch: 0 blue (you, droplets, pool) · 1 violet (pods) · 2 gold
 function ball(x, y, r, ch = 0) { if (r <= 0) return; const R = r * 1.85; f.drawImage(SPR[ch], x - R, y - R, R * 2, R * 2); }
 function slab(x, y, w, h, ch = 0) { f.fillStyle = SOLID[ch]; f.fillRect(x, y, w, h); }
-
 const abgr = h => { const n = parseInt(h.slice(1), 16); return (0xff000000 | ((n & 255) << 16) | (n & 0xff00) | (n >> 16)) >>> 0; };
 // tones: 0 outline, 1 shade, 2 core, 3 body, 4 light, 5 rim, 6 glint
 const PAL = [
   ['#0a1a52', '#1f47c9', '#2f6cf0', '#3f8cff', '#74bcff', '#b8e6ff', '#ffffff'],
-  ['#521338', '#c93a6a', '#f0557d', '#ff7190', '#ffa3ad', '#ffd6d0', '#ffffff'],
+  ['#1c1147', '#4a35b0', '#5d49cf', '#7a66ea', '#a595ff', '#d6ceff', '#ffffff'],
   ['#4f2f0c', '#d98a1c', '#f2b02c', '#ffc944', '#ffe07a', '#fff3bf', '#ffffff'],
 ].map(p => p.map(abgr));
 const BAY = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5];
-
-// static dithered backdrop: vertical gradient + soft bokeh + vignette
 const RAMP = ['#07081a', '#0a0b22', '#0d0e2b', '#111235', '#15153f', '#1a1949', '#201e55'].map(abgr);
-const bgBuf = new Uint32Array(W * H), bgSh = new Uint32Array(W * H);
-{
-  const bokeh = [[60, 50, 46], [300, 70, 60], [190, 150, 70], [350, 200, 44], [40, 190, 50], [150, 30, 30]];
-  for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
-    let s = 1.6 + 2.6 * y / H;
-    for (const [bx, by, br] of bokeh) { const d = Math.hypot(x - bx, y - by); if (d < br) s += 1.3 * (1 - d / br); }
-    const dx = (x - W / 2) / (W / 2), dy = (y - H / 2) / (H / 2);
-    s -= 1.6 * Math.max(0, dx * dx + dy * dy - .6);
+function buildBg() {
+  bgBuf = new Uint32Array(GW * GH); bgSh = new Uint32Array(GW * GH);
+  const bokeh = [[30, GH * .2, 40], [150, GH * .32, 46], [90, GH * .6, 60], [165, GH * .82, 36], [20, GH * .78, 40]];
+  for (let y = 0, i = 0; y < GH; y++) for (let x = 0; x < GW; x++, i++) {
+    let s = 1.5 + 2.6 * y / GH;
+    for (const [bx, by, br] of bokeh) { const d = Math.hypot(x - bx, y - by); if (d < br) s += 1.2 * (1 - d / br); }
+    const dx = (x - GW / 2) / (GW / 2), dy = (y - GH / 2) / (GH / 2);
+    s -= 1.5 * Math.max(0, dx * dx * .7 + dy * dy - .62);
     const k = Math.max(0, Math.min(6, Math.floor(s + BAY[(y & 3) << 2 | (x & 3)] / 16)));
     bgBuf[i] = RAMP[k]; bgSh[i] = RAMP[Math.max(0, k - 2)];
   }
 }
-const specks = [...Array(36)].map(() => ({ x: Math.random() * W, y: Math.random() * H, s: 2 + Math.random() * 5 }));
+const specks = [...Array(26)].map(() => ({ x: Math.random() * GW, y: Math.random() * 400, s: 2 + Math.random() * 5 }));
 const SPECK = abgr('#34337a');
-const out = ctx.createImageData(W, H), o32 = new Uint32Array(out.data.buffer);
-// optional extra shading hints, set by the current demo each frame:
-// surf[x] = y of a pool surface (goo below it is banded by depth);
-// orbs = big round bodies that get lit like a sphere, with a glint.
-const surfArr = new Float32Array(W); let surf = null; const orbs = [];
+let surf = false; const orbs = [];
 const orb = (x, y, R) => orbs.push({ x, y, R, R2: R * R });
 
 function render(dt) {
-  const d = f.getImageData(0, 0, W, H).data;
+  const d = f.getImageData(0, 0, GW, GH).data, W = GW, H = GH;
   o32.set(bgBuf);
-  for (const s of specks) { s.y -= s.s * dt; if (s.y < 0) { s.y = H - 1; s.x = Math.random() * W; } o32[(s.y | 0) * W + (s.x | 0)] = SPECK; }
-  const sh = (4 * W + 3) * 4;
+  for (const s of specks) { s.y -= s.s * dt; if (s.y < 0) { s.y = H - 1; s.x = Math.random() * W; } if (s.y < H) o32[(s.y | 0) * W + (s.x | 0)] = SPECK; }
+  const sh = (3 * W + 2) * 4;
   for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) {
     const p = i << 2; let c = -1, m = T - 1;
     if (d[p] > m) { c = 0; m = d[p]; }
     if (d[p + 1] > m) { c = 1; m = d[p + 1]; }
     if (d[p + 2] > m) { c = 2; }
     if (c < 0) {
-      // outside: outline hugging the goo, else soft drop shadow, else backdrop
       let o = -1, q;
       if (x > 0) { q = p - 4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
       if (o < 0 && x < W - 1) { q = p + 4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
       if (o < 0 && y > 0) { q = p - W4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
       if (o < 0 && y < H - 1) { q = p + W4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
       if (o >= 0) o32[i] = PAL[o][0];
-      else if (x >= 3 && y >= 4) { q = p - sh; if (d[q] >= T || d[q + 1] >= T || d[q + 2] >= T) o32[i] = bgSh[i]; }
+      else if (x >= 2 && y >= 3) { q = p - sh; if (d[q] >= T || d[q + 1] >= T || d[q + 2] >= T) o32[i] = bgSh[i]; }
       continue;
     }
-    const pc = p + c, v = d[pc], P = PAL[c];
+    const pc = p + c, v = d[pc], P = PAL[c], dz = BAY[(y & 3) << 2 | (x & 3)] / 16 - .5;
     const gx = (x < W - 2 ? d[pc + 8] : v) - (x > 1 ? d[pc - 8] : v);
     const gy = (y < H - 2 ? d[pc + 2 * W4] : v) - (y > 1 ? d[pc - 2 * W4] : v);
-    const b = (.6 * gx + .8 * gy) / (Math.sqrt(gx * gx + gy * gy) + 20) + (BAY[(y & 3) << 2 | (x & 3)] / 16 - .5) * .28;
+    const b = (.6 * gx + .8 * gy) / (Math.sqrt(gx * gx + gy * gy) + 20) + dz * .28;
     let t = 3;
     if (b > .5) t = v < T + 40 ? 5 : v < T + 105 ? 4 : 3;
     else if (b > .12) t = v < T + 55 ? 4 : 3;
@@ -140,16 +188,14 @@ function render(dt) {
     if (t === 3 && v >= 253) t = 2;
     if (b > .74 && v > T + 52 && v < T + 92) t = 6;
     if (t === 3 || t === 2) {
-      const dz = BAY[(y & 3) << 2 | (x & 3)] / 16 - .5;
-      if (c === 0 && surf && y - surf[x] > 2) { const dd = y - surf[x] + dz * 7; t = dd < 8 ? 4 : dd < 19 ? 3 : dd < 40 ? 2 : 1; }
+      if (c === 0 && surf && y - surfArr[x] > 2) { const dd = y - surfArr[x] + dz * 7; t = dd < 7 ? 4 : dd < 17 ? 3 : dd < 36 ? 2 : 1; }
       else for (const o of orbs) {
         const dx = x - o.x, dy = y - o.y;
         if (dx * dx + dy * dy < o.R2) {
           const nd = (-.6 * dx - .8 * dy) / o.R + dz * .3;
           t = nd > .52 ? 4 : nd > .02 ? 3 : nd > -.5 ? 2 : 1;
-          const hx = dx + .36 * o.R, hy = dy + .42 * o.R, hr = .17 * o.R;
+          const hx = dx + .36 * o.R, hy = dy + .42 * o.R, hr = .2 * o.R;
           if (hx * hx + hy * hy * 1.6 < hr * hr) t = 6;
-          else { const kx = dx + .1 * o.R, ky = dy + .62 * o.R; if (kx * kx + ky * ky < hr * hr * .16) t = 6; }
           break;
         }
       }
@@ -159,444 +205,437 @@ function render(dt) {
   ctx.putImageData(out, 0, 0);
 }
 
-// little pixel eyes, drawn on top of the goo
+// tiny pixel helpers drawn on top of the goo
 function eyes(x, y, s, lx = 0, ly = 0, blink = false, wide = false) {
   const w = Math.max(1, Math.round(s)), h = blink ? 1 : Math.max(2, Math.round(s * (wide ? 2.1 : 1.6))), gap = Math.max(2, Math.round(s * 2.4));
   const ex = Math.round(x + lx), ey = Math.round(y + ly - h / 2);
   ctx.fillStyle = '#0a1a52';
   ctx.fillRect(ex - gap / 2 - w | 0, ey, w, h); ctx.fillRect(ex + gap / 2 | 0, ey, w, h);
-  if (!blink && w >= 2) { ctx.fillStyle = '#fff'; ctx.fillRect(ex - gap / 2 - w | 0, ey, 1, 1); ctx.fillRect(ex + gap / 2 | 0, ey, 1, 1); }
+}
+const DIG = ['111101101101111', '010110010010111', '111001111100111', '111001111001111', '101101111001001', '111100111001111', '111100111101111', '111001001001001', '111101111101111', '111101111001111'];
+function num(x, y, n, color) {
+  const s = String(n), w = s.length * 4 - 1; let ox = Math.round(x - w / 2); const oy = Math.round(y - 2.5);
+  ctx.fillStyle = color;
+  for (const ch of s) { const g = DIG[+ch]; for (let k = 0; k < 15; k++) if (g[k] === '1') ctx.fillRect(ox + k % 3, oy + (k / 3 | 0), 1, 1); ox += 4; }
+}
+function ring(x, y, r, color) {
+  ctx.fillStyle = color; const n = Math.max(10, r * 1.5 | 0);
+  for (let i = 0; i < n; i += 2) { const a = i / n * TAU; ctx.fillRect(x + Math.cos(a) * r | 0, y + Math.sin(a) * r | 0, 1, 1); }
 }
 
 // ══════════════════════════ juice ══════════════════════════
 const rnd = (a, b) => a + Math.random() * (b - a);
 const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
-const fmt = n => n >= 1e9 ? (n / 1e9).toFixed(2) + 'B' : n >= 1e6 ? (n / 1e6).toFixed(2) + 'M' : n >= 1e4 ? (n / 1e3).toFixed(1) + 'k' : Math.floor(n).toLocaleString();
-const mouse = { x: W / 2, y: H / 2, down: false };
-const $ = id => document.getElementById(id);
+const fmt = n => { n = Math.floor(n); if (n < 1e4) return n.toLocaleString(); const u = ['k', 'M', 'B', 'T', 'q', 'Q']; let i = -1; while (n >= 1000 && i < u.length - 1) { n /= 1000; i++; } return (n < 10 ? n.toFixed(2) : n < 100 ? n.toFixed(1) : n.toFixed(0)) + u[i]; };
+const params = new URLSearchParams(location.search), BOT = +params.get('bot') || 0, AUTO = params.has('auto');
 let now = 0, shakeAmt = 0;
 const shake = a => { shakeAmt = Math.min(7, Math.max(shakeAmt, a)); };
-const blinking = () => now % 3.6 < .13;
-
-function popup(x, y, text, color) {
-  const st = $('stage'); if (st.querySelectorAll('.pop').length > 22) return;
-  const e = document.createElement('div'); e.className = 'pop'; e.textContent = text;
-  e.style.left = x / W * 100 + '%'; e.style.top = y / H * 100 + '%'; if (color) e.style.color = color;
+const buzz = ms => { if (BOT) return; try { navigator.vibrate && navigator.vibrate(ms); } catch (_) {} };
+function popup(x, y, text, cls) {
+  if (BOT) return; const st = $('stage'); if (st.querySelectorAll('.pop').length > 16) return;
+  const e = document.createElement('div'); e.className = 'pop ' + (cls || ''); e.textContent = text;
+  e.style.left = x / GW * 100 + '%'; e.style.top = y / GH * 100 + '%';
   e.onanimationend = () => e.remove(); st.appendChild(e);
 }
+function toast(text) { if (BOT) return; const t = $('toast'); t.textContent = text; t.classList.remove('on'); void t.offsetWidth; t.classList.add('on'); }
 
 // audio: every sound is a pitched water-drop "bloop" on a pentatonic scale
-let ac, master, lastB = 0;
+let ac, master, lastB = 0, muted = false;
 function initAudio() {
+  if (ac || BOT) return;
   try {
     ac = new (window.AudioContext || window.webkitAudioContext)();
-    master = ac.createGain(); master.gain.value = .9;
+    master = ac.createGain(); master.gain.value = muted ? 0 : .9;
     const comp = ac.createDynamicsCompressor(), dl = ac.createDelay(), fb = ac.createGain(), lp = ac.createBiquadFilter();
-    dl.delayTime.value = .19; fb.gain.value = .3; lp.frequency.value = 1700;
+    dl.delayTime.value = .19; fb.gain.value = .28; lp.frequency.value = 1700;
     master.connect(comp); comp.connect(ac.destination);
     master.connect(dl); dl.connect(lp); lp.connect(fb); fb.connect(dl); lp.connect(comp);
   } catch (_) { ac = null; }
 }
 const note = i => 220 * 2 ** (([0, 2, 4, 7, 9][i % 5] + 12 * Math.floor(i / 5)) / 12);
 function bloop(freq = 440, dur = .16, vol = .12) {
-  if (!ac) return; const t = ac.currentTime; if (t - lastB < .022) return; lastB = t;
+  if (!ac || muted) return; if (ac.state === 'suspended') ac.resume();
+  const t = ac.currentTime; if (t - lastB < .02) return; lastB = t;
   const o = ac.createOscillator(), g = ac.createGain();
   o.type = 'sine'; o.frequency.setValueAtTime(freq * .55, t); o.frequency.exponentialRampToValueAtTime(freq, t + .045);
   g.gain.setValueAtTime(.0001, t); g.gain.linearRampToValueAtTime(vol, t + .008); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
   o.connect(g); g.connect(master); o.start(t); o.stop(t + dur + .02);
 }
-const arpeggio = (from, n) => { for (let i = 0; i < n; i++) setTimeout(() => bloop(note(from + i), .3, .14), i * 75); };
+const arpeggio = (from, n, gap = 70) => { if (BOT) return; for (let i = 0; i < n; i++) setTimeout(() => bloop(note(from + i), .3, .13), i * gap); };
 
-// loose flecks of goo: splashes, trails, bursts
-function stepBits(bits, dt, floorY) {
-  for (const b of bits) {
-    if (b.g) b.vy += b.g * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.r -= dt * (b.shrink || 6);
-    if (floorY && b.y > floorY(b.x) && b.vy > 0) b.r = 0;
-  }
-  return bits.filter(b => b.r > .4);
-}
-function burst(bits, x, y, n, speed, ch = 0, g = 300, up = false) {
-  for (let i = 0; i < n; i++) {
-    const a = up ? rnd(-Math.PI * .85, -Math.PI * .15) : rnd(0, TAU), v = rnd(.4, 1) * speed;
-    bits.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: rnd(1.6, 3.2), ch, g, shrink: 3.5 });
-  }
-}
+// ══════════════════════════ save + upgrades ══════════════════════════
+const SAVE = 'bloopin.save.v1';
+let S = { goo: 0, layer: 1, best: 0, rounds: 0, up: {}, seen: {} };
+if (!BOT) try { const j = JSON.parse(localStorage.getItem(SAVE)); if (j && j.up) S = Object.assign(S, j); muted = !!S.muted; } catch (_) {}
+const save = () => { if (BOT) return; try { S.muted = muted; localStorage.setItem(SAVE, JSON.stringify(S)); } catch (_) {} };
+const lv = id => S.up[id] || 0;
 
-// a pool of goo with a springy surface. Its depth is the bank balance.
+// Every upgrade changes something you can see on the board, not just a number.
+// New ones are revealed as you reach new depths.
+const UP = [
+  { id: 'drops',  name: 'more drops',     desc: '+1 drop every round',                  max: 7,  cost: 8,     grow: 2.7 },
+  { id: 'power',  name: 'punch',          desc: 'drops hit harder: pod numbers shrink', max: 99, cost: 12,    grow: 2.15 },
+  { id: 'rich',   name: 'rich goo',       desc: 'every droplet is worth more',          max: 99, cost: 15,    grow: 2.2 },
+  { id: 'bounce', name: 'bouncy',         desc: 'drops keep their bounce longer',       max: 4,  cost: 10,    grow: 3 },
+    { id: 'splash', name: 'splash',         desc: 'popped pods burst their neighbours',   max: 5,  cost: 30,    grow: 3.4 },
+  { id: 'fat',    name: 'fat drop',       desc: 'a bigger drop is harder to miss with', max: 4,  cost: 90,    grow: 3.2, depth: 2 },
+  { id: 'aim',    name: 'long sight',     desc: 'see further along your shot',          max: 2,  cost: 70,    grow: 6,   depth: 2 },
+  { id: 'twin',   name: 'twins',          desc: 'a drop splits on its first hit',       max: 3,  cost: 260,   grow: 5,   depth: 3 },
+  { id: 'combo',  name: 'rhythm',         desc: 'long combos make the goo richer',      max: 5,  cost: 220,   grow: 3,   depth: 3 },
+  { id: 'skip',   name: 'skipping stone', desc: 'drops bounce back off the pool',       max: 3,  cost: 900,   grow: 5,   depth: 4 },
+  { id: 'gold',   name: 'gold pods',      desc: 'rare gold pods worth 8×',              max: 5,  cost: 800,   grow: 3,   depth: 4 },
+  { id: 'leak',   name: 'leaky tap',      desc: 'a few free little drops each round',       max: 4,  cost: 3000,  grow: 4,   depth: 5 },
+  { id: 'tad',    name: 'tadpoles',       desc: 'popped pods can hatch a mini drop',    max: 5,  cost: 9000,  grow: 3.5, depth: 6 },
+  { id: 'bomb',   name: 'boom pods',      desc: 'pods that blow up everything near',    max: 3,  cost: 30000, grow: 5,   depth: 7 },
+  { id: 'heavy',  name: 'heavy',          desc: 'plough straight through weak pods',    max: 3,  cost: 1e5,   grow: 6,   depth: 8 },
+];
+const cost = u => Math.round(u.cost * (u.id === 'power' && +params.get('pg') || u.id === 'rich' && +params.get('rg') || u.grow) ** lv(u.id));
+const open = u => S.layer >= (u.depth || 1);
+const dmgNow = () => 1.4 ** lv('power');
+const richMul = () => 1.25 ** lv('rich');
+const HPG = +params.get('hpg') || 1.5, layerVal = L => 1.6 ** (L - 1);
+// pods toughen fastest between depths 4 and 14, while new tricks are still arriving
+const EX = +params.get('ex') || 30, hpBase = L => { const t = clamp((L - 4) / 10, 0, 1); return HPG ** (L - 1) * (1 + (EX - 1) * t * t * (3 - 2 * t)); };
+const hits = p => Math.max(1, Math.ceil(p.hp / dmgNow() - 1e-6));
+
+// ══════════════════════════ the round ══════════════════════════
+const LX = GW / 2, LY = 46, SPEED = 235, GRAV = 270;
+let R = null, pool = null, aim = null;
+
 function makePool() {
-  const n = W / 4 + 1;
+  const n = GW / 4 + 1;
   return {
-    n, h: new Float32Array(n), v: new Float32Array(n), base: 9,
-    depthFor: goo => Math.min(84, 9 + 10 * Math.log2(1 + goo / 12)),
-    update(dt, goo) {
-      const { h, v } = this; this.base += (this.depthFor(goo) - this.base) * Math.min(1, dt * 3);
+    n, h: new Float32Array(n), v: new Float32Array(n), base: 12,
+    update(dt, depth) {
+      const { h, v } = this; this.base += (depth - this.base) * Math.min(1, dt * 4);
       for (let i = 0; i < n; i++) { const l = i ? h[i - 1] : h[i], r = i < n - 1 ? h[i + 1] : h[i]; v[i] += (-50 * h[i] + 260 * (l + r - 2 * h[i]) - 1.8 * v[i]) * dt; }
-      for (let i = 0; i < n; i++) h[i] = clamp(h[i] + v[i] * dt, -this.base + 2, 30);
+      for (let i = 0; i < n; i++) h[i] = clamp(h[i] + v[i] * dt, -this.base + 3, 26);
     },
-    top(x) { const q = clamp(x / 4, 0, n - 1.001), i = q | 0, t = q - i; return H - this.base - (this.h[i] * (1 - t) + this.h[i + 1] * t); },
+    top(x) { const q = clamp(x / 4, 0, n - 1.001), i = q | 0, t = q - i; return GH - this.base - (this.h[i] * (1 - t) + this.h[i + 1] * t); },
     splash(x, pow) { const c = Math.round(x / 4); for (let k = -3; k <= 3; k++) { const i = c + k; if (i >= 0 && i < n) this.v[i] -= pow * (1 - Math.abs(k) / 4); } },
-    draw() { for (let x = 0; x < W; x += 2) { const y = this.top(x + 1) + Math.sin(now * 1.6 + x * .09) * .7; slab(x, y, 2, H - y + 1); surfArr[x] = surfArr[x + 1] = y; } },
+    draw() { for (let x = 0; x < GW; x += 2) { const y = this.top(x + 1) + Math.sin(now * 1.6 + x * .09) * .7; slab(x, y, 2, GH - y + 1); surfArr[x] = surfArr[x + 1] = y; } },
   };
 }
+const podR = hp => 5.2 + Math.min(hp, 6) * .75;
+const maxDrops = () => 3 + lv('drops');
 
-// ══════════════════════════ 1 · DEW ══════════════════════════
-// A cold window covered in dew. Sweep a drop through it and it swallows
-// everything it touches; let go and it runs down into the pool.
-const dew = {
-  name: 'DEW',
-  hint: 'Drag across the glass. Your drop slurps up every bead it touches and gets fatter. Let go and it runs down into the pool — the pool is your bank. Beads that grow heavy run down by themselves.',
-  init() {
-    Object.assign(this, { goo: 0, cond: 0, rich: 0, reach: 0, acc: 0, dots: [], runs: [], bits: [], held: null, pool: makePool() });
-    for (let i = 0; i < 300; i++) this.addDot(true);
-  },
-  sub() { return this.held ? `holding ${fmt(this.held.m * (1 + this.rich))}` : ''; },
-  shop: [
-    { label: s => `more dew`, lv: s => s.cond, cost: s => 25 * 1.6 ** s.cond, buy: s => s.cond++ },
-    { label: s => `richer dew`, lv: s => s.rich, cost: s => 60 * 2.2 ** s.rich, buy: s => s.rich++ },
-    { label: s => `wider slurp`, lv: s => s.reach, cost: s => 40 * 1.9 ** s.reach, can: s => s.reach < 6, buy: s => s.reach++ },
-  ],
-  rr: m => Math.min(16, 1.1 * Math.sqrt(m) + .7),
-  addDot(seed) {
-    const x = rnd(5, W - 5), y = rnd(12, H - this.pool.base - 10);
-    if (this.dots.length >= 560) { const d = this.dots[Math.random() * this.dots.length | 0]; return this.grow(d); }
-    for (const d of this.dots) if (Math.abs(d.x - x) < d.r + 1.6 && Math.hypot(d.x - x, d.y - y) < d.r + 1.4) return this.grow(d);
-    const m = seed ? 1 + (Math.random() ** 3 * 7 | 0) : 1;
-    this.dots.push({ x, y, m, r: 1.1 * Math.sqrt(m) + .4 });
-  },
-  grow(d) {
-    d.m++; d.r = 1.1 * Math.sqrt(d.m) + .4;
-    if (d.m >= 12) { d.dead = true; this.runs.push({ x: d.x, y: d.y, vx: 0, vy: 0, m: d.m, n: 0, ph: rnd(0, 6), trail: 0 }); }
-  },
-  down() { this.held = { x: mouse.x, y: mouse.y, vx: 0, vy: 0, m: 2, n: 0, ph: rnd(0, 6), trail: 0, held: true }; this.runs.push(this.held); bloop(note(0), .12, .08); },
-  up() { if (this.held) { this.held.held = false; this.held = null; } },
-  update(dt) {
-    const pool = this.pool;
-    this.acc += dt * 9 * 1.45 ** this.cond;
-    while (this.acc >= 1) { this.acc--; this.addDot(); }
-    for (const r of this.runs) {
-      const rr = this.rr(r.m);
-      if (r.held) {
-        r.vx += ((mouse.x - r.x) * 110 - r.vx * 13) * dt; r.vy += ((mouse.y - r.y) * 110 - r.vy * 13) * dt;
-      } else {
-        const vt = Math.min(210, 55 + r.m * 1.6);
-        r.vy += (vt - r.vy) * 2.2 * dt; r.vx += (Math.sin(now * 4 + r.ph) * 16 - r.vx) * 5 * dt;
-        r.trail -= r.vy * dt;
-        if (r.trail <= 0) { r.trail = 3; this.bits.push({ x: r.x, y: r.y - rr * .7, vx: 0, vy: 0, r: rr * .5, ch: 0, shrink: 5 }); }
-      }
-      r.x = clamp(r.x + r.vx * dt, 3, W - 3); r.y += r.vy * dt;
-      const reach = rr + 2 + this.reach * 2.5;
-      for (const d of this.dots) {
-        if (d.dead) continue;
-        const dx = d.x - r.x, dy = d.y - r.y;
-        if (dx * dx + dy * dy < (reach + d.r) ** 2) {
-          d.dead = true; r.m += d.m; r.n++;
-          this.bits.push({ x: d.x, y: d.y, vx: -dx * 9, vy: -dy * 9, r: d.r, ch: 0, shrink: 14 });
-          bloop(note(Math.min(14, r.n >> 2)), .13, .07);
-        }
-      }
-      if (r.y + rr * .5 > pool.top(r.x)) {   // plop into the pool
-        const pay = Math.round(r.m * (1 + this.rich));
-        this.goo += pay; r.dead = true; if (r === this.held) this.held = null;
-        pool.splash(r.x, Math.min(190, 30 + r.m * 2.2));
-        burst(this.bits, r.x, pool.top(r.x) - 1, Math.min(12, 3 + r.m / 5 | 0), Math.min(170, 60 + r.m * 1.5), 0, 320, true);
-        popup(r.x, pool.top(r.x) - 12, '+' + fmt(pay));
-        shake(Math.min(4, r.m / 18)); bloop(note(Math.min(9, r.n >> 3)) / 2, .28, Math.min(.2, .08 + r.m / 300));
-      }
-    }
-    for (const d of this.dots) if (!d.dead && d.y > pool.top(d.x) - 2) { d.dead = true; this.goo += d.m; }
-    this.dots = this.dots.filter(d => !d.dead); this.runs = this.runs.filter(r => !r.dead);
-    this.bits = stepBits(this.bits, dt, x => pool.top(x) + 2);
-    pool.update(dt, this.goo);
-  },
-  draw() {
-    this.pool.draw();
-    for (const d of this.dots) ball(d.x, d.y, d.r);
-    for (const b of this.bits) ball(b.x, b.y, b.r, b.ch);
-    for (const r of this.runs) {
-      const rr = this.rr(r.m); ball(r.x, r.y, rr); if (rr > 5) orb(r.x, r.y, rr + 1);
-      if (r.held) { ball(r.x - r.vx * .028, r.y - r.vy * .028, rr * .78); ball(r.x - r.vx * .055, r.y - r.vy * .055, rr * .5); }
-      else ball(r.x, r.y - rr * .85, rr * .6);
-    }
-  },
-  post() {
-    for (const r of this.runs) {
-      const rr = this.rr(r.m); if (rr < 4.5) continue;
-      const l = Math.hypot(r.vx, r.vy) || 1, k = Math.min(1, l / 60) * rr * .2;
-      eyes(r.x, r.y - rr * .1, rr * .17, r.vx / l * k, r.vy / l * k, blinking(), r.held);
-    }
-  },
-};
-
-// ══════════════════════════ 2 · JELLY ══════════════════════════
-// One big jelly you can grab, stretch and throw. It eats the rain.
-const FLOOR = H - 14, GRAV = 430;
-const jelly = {
-  name: 'JELLY',
-  hint: 'Grab the jelly and throw it — it squashes, wobbles and gobbles every drop it touches. Click anywhere else to make it hop there. The jelly is your wallet: spending shrinks it. Fill it up, then SPLIT.',
-  init() {
-    Object.assign(this, { goo: 6, goal: 250, mult: 1, rain: 0, sweet: 0, acc: 0, combo: 0, comboT: 0, pend: 0, munch: 0, grab: false, beads: [], bits: [], babies: [],
-      b: { x: W / 2, y: FLOOR - 30, vx: 0, vy: 0, pvx: 0, pvy: 0, R: 14, nodes: [...Array(20)].map((_, i) => ({ a: i / 20 * TAU, off: 0, v: 0 })) } });
-  },
-  sub() { return `fill to ${fmt(this.goal)}` + (this.mult > 1 ? `   ×${this.mult}` : '') + (this.combo > 4 ? `\ncombo ${this.combo}` : ''); },
-  shop: [
-    { label: s => `heavier rain`, lv: s => s.rain, cost: s => 20 * 1.6 ** s.rain, buy: s => s.rain++ },
-    { label: s => `sweeter drops`, lv: s => s.sweet, cost: s => 50 * 2 ** s.sweet, buy: s => s.sweet++ },
-    { label: s => `baby jelly`, lv: s => s.babies.length, cost: s => 80 * 1.8 ** s.babies.length, can: s => s.babies.length < 6, buy: s => s.baby() },
-    { label: s => `SPLIT  ×${s.mult * 2}`, cost: s => s.goal, free: true, buy: s => s.split() },
-  ],
-  val() { return (1 + this.sweet) * this.mult; },
-  baby() { const b = this.b; this.babies.push({ x: b.x, y: b.y - 6, vx: rnd(-90, 90), vy: -180, cd: rnd(.4, 1.2), air: true }); },
-  split() {
-    const b = this.b;
-    burst(this.bits, b.x, b.y, 34, 300, 0, 380);
-    this.goo = 6; this.mult *= 2; this.goal *= 3; if (this.babies.length < 6) this.baby();
-    for (const n of b.nodes) n.v += rnd(-120, 120);
-    shake(7); arpeggio(2, 7); popup(b.x, b.y - 24, `×${this.mult}!`, '#fff');
-  },
-  impact(s, an) {
-    const b = this.b; for (const n of b.nodes) n.v -= s * .55 * Math.cos(2 * (n.a - an));
-    if (s > 150) { shake(Math.min(4, s / 170)); bloop(70 + rnd(0, 20), .22, Math.min(.25, s / 2200)); }
-    if (s > 260) burst(this.bits, b.x + Math.cos(an) * b.R * .7, b.y + Math.sin(an) * b.R * .7, 5, s * .3, 0, 380);
-  },
-  eat(d, x, y) {
-    d.dead = true; const v = this.val(); this.goo += v;
-    this.combo++; this.comboT = .8; this.pend += v; bloop(note(Math.min(14, this.combo >> 1)), .14, .08);
-  },
-  down() {
-    const b = this.b;
-    if (Math.hypot(mouse.x - b.x, mouse.y - b.y) < b.R + 10) { this.grab = true; bloop(note(3), .1, .08); }
-    else if (b.y > FLOOR - b.R * 1.6) { b.vx = clamp((mouse.x - b.x) * 2.2, -330, 330); b.vy = -clamp(160 + (FLOOR - mouse.y) * 1.6, 160, 420); this.impact(140, Math.PI / 2); bloop(note(1), .16, .1); }
-  },
-  up() { if (this.grab) { this.grab = false; const b = this.b, l = Math.hypot(b.vx, b.vy); if (l > 720) { b.vx *= 720 / l; b.vy *= 720 / l; } } },
-  update(dt) {
-    const b = this.b, R = b.R;
-    b.R += (Math.min(44, 10 + 32 * Math.log(1 + this.goo) / Math.log(1 + this.goal)) - b.R) * Math.min(1, dt * 6);
-    if ((this.comboT -= dt) <= 0) { if (this.pend) popup(b.x, b.y - R - 8, '+' + fmt(this.pend), this.combo >= 10 ? '#fff' : null); this.combo = 0; this.pend = 0; }
-    this.munch -= dt;
-
-    // body
-    if (this.grab) { b.vx += ((mouse.x - b.x) * 130 - b.vx * 15) * dt; b.vy += ((mouse.y - b.y) * 130 - b.vy * 15) * dt; }
-    else b.vy += GRAV * dt;
-    b.x += b.vx * dt; b.y += b.vy * dt;
-    const cr = R * .72;
-    if (b.y > FLOOR - cr) { b.y = FLOOR - cr; if (b.vy > 50) this.impact(b.vy, Math.PI / 2); b.vy = (!this.grab && b.vy > 90) ? -b.vy * .42 : 0; if (!this.grab) b.vx *= 1 - Math.min(1, 5 * dt); }
-    if (b.y < cr) { b.y = cr; if (b.vy < -50) this.impact(-b.vy, -Math.PI / 2); b.vy = this.grab ? 0 : -b.vy * .4; }
-    if (b.x < cr) { b.x = cr; if (b.vx < -50) this.impact(-b.vx, Math.PI); b.vx = this.grab ? 0 : -b.vx * .5; }
-    if (b.x > W - cr) { b.x = W - cr; if (b.vx > 50) this.impact(b.vx, 0); b.vx = this.grab ? 0 : -b.vx * .5; }
-
-    // rim: inertia makes it lag behind the body, neighbours pass the wobble around
-    let ax = (b.vx - b.pvx) / dt, ay = (b.vy - b.pvy) / dt - (this.grab ? 0 : GRAV);
-    const al = Math.hypot(ax, ay); if (al > 1600) { ax *= 1600 / al; ay *= 1600 / al; }
-    b.pvx = b.vx; b.pvy = b.vy;
-    const N = b.nodes.length;
-    for (let i = 0; i < N; i++) {
-      const n = b.nodes[i], l = b.nodes[(i + N - 1) % N].off, r = b.nodes[(i + 1) % N].off, c = Math.cos(n.a), s = Math.sin(n.a);
-      const idle = Math.sin(now * 2.2 + i * 1.3) * R * .035;
-      n.v += (-210 * (n.off - idle) + 130 * (l + r - 2 * n.off) - 6.5 * n.v - (ax * c + ay * s) * .7 * R / 20) * dt;
-    }
-    for (const n of b.nodes) {
-      n.off = clamp(n.off + n.v * dt, -R * .5, R * .6);
-      const c = Math.cos(n.a), s = Math.sin(n.a); let max = 1e9;
-      if (s > .15) max = Math.min(max, (FLOOR - b.y) / s - R); else if (s < -.15) max = Math.min(max, b.y / -s - R);
-      if (c > .15) max = Math.min(max, (W - b.x) / c - R); else if (c < -.15) max = Math.min(max, b.x / -c - R);
-      if (n.off > max) { n.off = Math.max(max, -R * .5); if (n.v > 0) n.v = 0; }
-    }
-
-    // rain
-    this.acc += dt * 2.6 * 1.4 ** this.rain;
-    while (this.acc >= 1) { this.acc--; if (this.beads.length < 140) this.beads.push({ x: rnd(6, W - 6), y: -4, vy: rnd(20, 60), r: 2.7 }); }
-    for (const d of this.beads) {
-      if (!d.rest) { d.vy += 300 * dt; d.y += d.vy * dt; if (d.y > FLOOR - 2.4) { d.y = FLOOR - 2.4; d.rest = true; } }
-      const dx = d.x - b.x, dy = d.y - b.y;
-      if (dx * dx + dy * dy < (R + 3) ** 2) {
-        this.eat(d, d.x, d.y); this.munch = .16;
-        const a = Math.atan2(dy, dx); for (const n of b.nodes) n.v += 55 * Math.max(0, Math.cos(n.a - a)) ** 6;
-      }
-    }
-
-    // babies hop toward the nearest drop and eat for you
-    for (const k of this.babies) {
-      k.vy += GRAV * dt; k.x += k.vx * dt; k.y += k.vy * dt;
-      if (k.x < 5) { k.x = 5; k.vx = Math.abs(k.vx); } else if (k.x > W - 5) { k.x = W - 5; k.vx = -Math.abs(k.vx); }
-      if (k.y > FLOOR - 4.5) {
-        k.y = FLOOR - 4.5; k.vy = 0; k.vx *= 1 - Math.min(1, 8 * dt);
-        if (k.air) { k.air = false; k.sq = 1; }
-        if ((k.cd -= dt) <= 0) {
-          let best = null, bd = 1e9;
-          for (const d of this.beads) if (d.rest && !d.dead) { const q = Math.abs(d.x - k.x); if (q < bd) { bd = q; best = d; } }
-          k.cd = rnd(.5, 1.1); k.air = true; k.vy = -rnd(130, 190);
-          k.vx = best ? clamp((best.x - k.x) * 1.5, -110, 110) : rnd(-60, 60);
-        }
-      }
-      k.sq = Math.max(0, (k.sq || 0) - dt * 5);
-      for (const d of this.beads) if (!d.dead && Math.abs(d.x - k.x) < 8 && Math.abs(d.y - k.y) < 8) this.eat(d, d.x, d.y);
-    }
-    this.beads = this.beads.filter(d => !d.dead);
-    this.bits = stepBits(this.bits, dt, () => FLOOR);
-  },
-  draw() {
-    const b = this.b, R = b.R;
-    for (const d of this.beads) { ball(d.x, d.y, d.r); if (!d.rest) ball(d.x, d.y - 3, d.r * .6); }
-    for (const q of this.bits) ball(q.x, q.y, q.r, q.ch);
-    for (const k of this.babies) { ball(k.x, k.y + k.sq, 5 + k.sq); ball(k.x, k.y - clamp(k.vy * .014, -3, 3), 4); orb(k.x, k.y, 6.5); }
-    ball(b.x, b.y, R * .78); orb(b.x, b.y, R * 1.12);
-    for (const n of b.nodes) { const q = R * .58 + n.off; ball(b.x + Math.cos(n.a) * q, b.y + Math.sin(n.a) * q, R * .42); }
-  },
-  post() {
-    ctx.fillStyle = '#0a0b22'; ctx.fillRect(0, FLOOR, W, H - FLOOR);
-    ctx.fillStyle = '#2b2a6e'; ctx.fillRect(0, FLOOR, W, 1);
-    ctx.fillStyle = '#15153f'; for (let x = 6; x < W; x += 16) ctx.fillRect(x, FLOOR + 4 + (x % 3), 5, 1);
-    const b = this.b, R = b.R, dx = mouse.x - b.x, dy = mouse.y - b.y, l = Math.hypot(dx, dy) || 1, k = Math.min(1, l / 50) * R * .16;
-    const ex = b.x + dx / l * k, ey = b.y - R * .1 + dy / l * k, es = Math.max(2, R * .15);
-    eyes(ex, ey, es, 0, 0, blinking() && !this.grab, this.grab);
-    ctx.fillStyle = '#ff7190'; const bw = Math.max(2, Math.round(es * 1.2)), bo = Math.round(es * 3.1);
-    ctx.fillRect(Math.round(ex - bo - bw / 2), Math.round(ey + es * 1.5), bw, 1); ctx.fillRect(Math.round(ex + bo - bw / 2), Math.round(ey + es * 1.5), bw, 1);
-    if (this.munch > 0) { ctx.fillStyle = '#0a1a52'; const mw = Math.max(2, Math.round(es * 1.6)); ctx.fillRect(Math.round(ex - mw / 2), Math.round(ey + es * 2.2), mw, Math.max(1, Math.round(es))); }
-    for (const q of this.babies) eyes(q.x, q.y - 1, 1, clamp(q.vx * .02, -1, 1), 0, blinking());
-  },
-};
-
-// ══════════════════════════ 3 · CHIME ══════════════════════════
-// A goo music box. Drips ring every peg they hit; the longer a drop's
-// run of notes, the more it is worth when it lands in the pool.
-const chime = {
-  name: 'CHIME',
-  hint: 'Drag the gold pegs around, or click empty space to add one. Each peg rings a note (low on the left, high on the right). A drop is worth more for every peg it rings on the way down — build a run.',
-  init() {
-    Object.assign(this, { goo: 0, rate: 0, rich: 0, maxPegs: 7, emit: .5, ps: [], rings: [], bits: [], drag: null, pool: makePool(),
-      pegs: [[150, 62], [234, 62], [108, 100], [192, 100], [276, 100], [150, 140]].map(([x, y]) => this.peg(x, y)) });
-  },
-  peg: (x, y) => ({ x, y, ox: 0, oy: 0, vx: 0, vy: 0, pulse: 0 }),
-  sub() { return `pegs ${this.pegs.length}/${this.maxPegs}`; },
-  shop: [
-    { label: s => `faster drip`, lv: s => s.rate, cost: s => 20 * 1.6 ** s.rate, buy: s => s.rate++ },
-    { label: s => `richer goo`, lv: s => s.rich, cost: s => 45 * 2 ** s.rich, buy: s => s.rich++ },
-    { label: s => `another peg`, lv: s => s.maxPegs - 7, cost: s => 30 * 1.5 ** (s.maxPegs - 7), can: s => s.maxPegs < 16, buy: s => s.maxPegs++ },
-  ],
-  gap() { return .34 / (1 + this.rate * .45); },
-  fx() { return W / 2 + Math.sin(now * .6) * 96; },
-  down() {
-    let g = this.pegs.find(g => Math.hypot(g.x - mouse.x, g.y - mouse.y) < 12);
-    if (!g && this.pegs.length < this.maxPegs) { g = this.peg(mouse.x, mouse.y); g.pulse = 1; this.pegs.push(g); bloop(note(g.x / W * 10 | 0), .2, .1); }
-    this.drag = g || null;
-  },
-  up() { this.drag = null; },
-  update(dt) {
-    const ps = this.ps, pool = this.pool;
-    if (this.drag) { this.drag.x = clamp(mouse.x, 8, W - 8); this.drag.y = clamp(mouse.y, 28, H - pool.base - 14); }
-    if ((this.emit -= dt) <= 0 && ps.length < 230) { this.emit = this.gap(); ps.push({ x: this.fx() + rnd(-.5, .5), y: 13, vx: rnd(-4, 4), vy: 25, hits: 0, cd: 0 }); }
-    for (let i = 0; i < ps.length; i++) for (let j = i + 1; j < ps.length; j++) {   // sticky + springy = viscous
-      const a = ps[i], b = ps[j], dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
-      if (d2 < 72 && d2 > .01) { const d = Math.sqrt(d2), fo = (d < 5.2 ? (5.2 - d) * 60 : -(d - 5.2) * 9) * dt / d; a.vx -= dx * fo; a.vy -= dy * fo; b.vx += dx * fo; b.vy += dy * fo; }
-    }
-    for (const p of ps) {
-      p.vy += 190 * dt; p.vx *= 1 - 1.4 * dt; p.vy *= 1 - .6 * dt; p.cd -= dt;
-      p.x += p.vx * dt; p.y += p.vy * dt;
-      if (p.x < 3) { p.x = 3; p.vx = Math.abs(p.vx) * .4; } else if (p.x > W - 3) { p.x = W - 3; p.vx = -Math.abs(p.vx) * .4; }
-      for (const g of this.pegs) {
-        const px = g.x + g.ox, py = g.y + g.oy, dx = p.x - px, dy = p.y - py, d = Math.hypot(dx, dy) || .01, min = 8.6;
-        if (d < min) {
-          const nx = dx / d, ny = dy / d, vn = p.vx * nx + p.vy * ny;
-          p.x = px + nx * min; p.y = py + ny * min;
-          if (vn < 0) {
-            p.vx -= 1.55 * vn * nx; p.vy -= 1.55 * vn * ny;
-            if (vn < -32 && p.cd <= 0) {
-              p.hits++; p.cd = .12; g.pulse = 1; g.vx += nx * vn * 1.1; g.vy += ny * vn * 1.1;
-              this.rings.push({ x: px, y: py, r: 7, life: .4 });
-              bloop(note(clamp(g.x / W * 10 | 0, 0, 9)), .34, .085);
-            }
-          }
-        }
-      }
-      if (p.y > pool.top(p.x)) {
-        const pay = (1 + this.rich) * (1 + p.hits); this.goo += pay; p.dead = true;
-        pool.splash(p.x, 13 + p.hits * 5);
-        if (p.hits >= 2) { popup(p.x, pool.top(p.x) - 10, '+' + fmt(pay), p.hits >= 4 ? '#ffe07a' : null); burst(this.bits, p.x, pool.top(p.x) - 1, 1 + p.hits, 50 + p.hits * 14, 0, 320, true); }
-        if (p.hits >= 4) shake(1.5);
-      }
-    }
-    this.ps = ps.filter(p => !p.dead);
-    for (const g of this.pegs) {
-      g.vx += (-320 * g.ox - 9 * g.vx) * dt; g.vy += (-320 * g.oy - 9 * g.vy) * dt;
-      g.ox = clamp(g.ox + g.vx * dt, -5, 5); g.oy = clamp(g.oy + g.vy * dt, -5, 5); g.pulse = Math.max(0, g.pulse - dt * 4);
-    }
-    for (const r of this.rings) { r.life -= dt; r.r += 42 * dt; }
-    this.rings = this.rings.filter(r => r.life > 0);
-    this.bits = stepBits(this.bits, dt, x => pool.top(x) + 2);
-    pool.update(dt, this.goo);
-  },
-  draw() {
-    this.pool.draw();
-    const fx = this.fx(), grow = 1 - clamp(this.emit / this.gap(), 0, 1);
-    ball(fx, 3, 8, 2); ball(fx, 10 + grow * 2, 1 + grow * 2.6);
-    for (const p of this.ps) ball(p.x, p.y, 3.1);
-    for (const b of this.bits) ball(b.x, b.y, b.r, b.ch);
-    for (const g of this.pegs) ball(g.x + g.ox, g.y + g.oy, 5.6 + g.pulse * 2.4, 2);
-  },
-  post() {
-    for (const r of this.rings) {
-      ctx.fillStyle = r.life > .2 ? '#fff3bf' : '#d98a1c';
-      const n = Math.max(10, r.r * 1.6 | 0); for (let i = 0; i < n; i += 2) { const a = i / n * TAU; ctx.fillRect(r.x + Math.cos(a) * r.r | 0, r.y + Math.sin(a) * r.r | 0, 1, 1); }
-    }
-  },
-};
-
-// ══════════════════════════ shell ══════════════════════════
-const demos = [dew, jelly, chime];
-let cur, buttons = [];
-const AUTO = location.search.includes('auto');
-
-function start(i) {
-  cur = demos[i]; cur.init(); mouse.down = false;
-  [...$('tabs').children].forEach((b, k) => b.classList.toggle('on', k === i));
-  $('hint').textContent = cur.hint; $('shop').innerHTML = '';
-  buttons = (cur.shop || []).map(it => {
-    const b = document.createElement('button'); b.innerHTML = '<span></span><b></b>';
-    b.onclick = () => { const c = it.cost(cur); if (cur.goo < c) return; if (!it.free) cur.goo -= c; it.buy(cur); arpeggio(4, 3); };
-    $('shop').appendChild(b); return [b, it];
-  });
-  history.replaceState(null, '', '#' + (i + 1));
-}
-demos.forEach((d, i) => { const b = document.createElement('button'); b.textContent = `${i + 1} ${d.name}`; b.onclick = () => start(i); $('tabs').appendChild(b); });
-addEventListener('keydown', e => { const i = +e.key - 1; if (demos[i]) start(i); });
-
-function pos(e) { const r = cv.getBoundingClientRect(); mouse.x = (e.clientX - r.left) / r.width * W; mouse.y = (e.clientY - r.top) / r.height * H; }
-cv.addEventListener('pointerdown', e => { if (!ac) initAudio(); cv.setPointerCapture(e.pointerId); pos(e); mouse.down = true; cur.down && cur.down(); });
-cv.addEventListener('pointermove', pos);
-const release = e => { if (!mouse.down) return; pos(e); mouse.down = false; cur.up && cur.up(); };
-cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release);
-
-function step(dt) {
-  now += dt;
-  if (AUTO) {   // scripted input, for headless screenshots
-    mouse.x = W / 2 + Math.sin(now * 1.7) * 150; mouse.y = 95 + Math.sin(now * 2.9) * 70;
-    const want = now % 3 < 2.2; if (want !== mouse.down) { mouse.down = want; want ? cur.down && cur.down() : cur.up && cur.up(); }
+function genField() {
+  const L = S.layer, top = 84, bot = GH - 96, pods = [], mask = (L - 1) % 5;
+  const rows = Math.floor((bot - top) / 17) + 1, cy = (top + bot) / 2;
+  for (let r = 0; r < rows; r++) for (let c = 0; c < 8; c++) {
+    const x = 20 + c * 20 + (r & 1 ? 10 : 0), y = top + r * 17; if (x > GW - 14) continue;
+    const nx = (x - GW / 2) / (GW / 2 - 14), ny = (y - cy) / ((bot - top) / 2), rr = Math.hypot(nx, ny);
+    const keep = mask === 0 ? Math.abs(nx) + Math.abs(ny) < .9 : mask === 1 ? rr > .5 && rr < 1.02 : mask === 2 ? Math.abs(nx) > .36 && Math.abs(ny) < .85
+      : mask === 3 ? Math.abs(Math.abs(nx) - Math.abs(ny)) < .34 : (r + c) % 3 !== 0;
+    if (!keep) continue;
+    const gold = Math.random() < .035 * lv('gold');
+    const rel = gold ? .5 : .55 + Math.random() ** 2.5 * (L === 1 ? .6 : 1.1), hp = hpBase(L) * rel;
+    pods.push({ x: x + rnd(-1, 1), y: y + rnd(-1, 1), hp, max: hp, rel, r: 6, type: gold ? 'gold' : '', s: 0, sv: 0, ox: 0, oy: 0, vx: 0, vy: 0, born: -(r * .035 + Math.random() * .12) });
   }
-  cur.update(dt);
+  for (let k = 0; k < lv('bomb'); k++) { const p = pods[Math.random() * pods.length | 0]; if (p && !p.type) { p.type = 'bomb'; p.rel = .5; p.hp = p.max = .5 * hpBase(L); } }
+  return pods;
 }
+
+function newRound() {
+  const pods = genField();
+  R = { state: 'play', t: 0, pods, balls: [], drops: [], bits: [], rings: [], queue: [], total: pods.length, popped: 0, left: maxDrops(), haul: 0, got: 0,
+        combo: 0, comboT: 0, best: 0, plops: 0, cool: .5, slow: 0, freeze: 0, endT: 0, leakT: 2, leaks: 0, src: null, cleared: false, shots: 0,
+        value: pods.reduce((a, p) => a + p.rel * (p.type === 'gold' ? 16 : 1), 0) * layerVal(S.layer) * richMul() };
+  if (!pool) pool = makePool();
+  aim = null; ui.round();
+}
+
+function addBall(x, y, vx, vy, o = {}) {
+  const mini = !!o.mini, r = mini ? 2.6 : 4 + lv('fat') * .7;
+  R.balls.push({ x, y, vx, vy, r, dmg: dmgNow() * (mini ? .5 : 1), mini, plough: mini ? 0 : lv('heavy') * 2, leak: !!o.leak, split: mini || !!o.split, skips: mini ? 0 : lv('skip'), hits: 0, age: 0, sq: 0, trail: 0 });
+}
+function fire(a) {
+  if (R.state !== 'play' || R.left <= 0 || R.cool > 0) return false;
+  R.left--; R.shots++; R.cool = .22;
+  addBall(LX + Math.cos(a) * 8, LY + Math.sin(a) * 8, Math.cos(a) * SPEED, Math.sin(a) * SPEED);
+  bloop(note(0), .2, .12); buzz(8); ui.pips(); $('hint').classList.remove('on');
+  return true;
+}
+
+function bitsBurst(x, y, n, speed, ch, up) {
+  for (let i = 0; i < n; i++) {
+    const a = up ? rnd(-Math.PI * .85, -Math.PI * .15) : rnd(0, TAU), v = rnd(.4, 1) * speed;
+    R.bits.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, r: rnd(1.4, 2.6), ch, g: 300, shrink: 4.5 });
+  }
+}
+function damage(p, dmg, nx = 0, ny = 0) {
+  if (p.dead) return;
+  p.hp -= dmg; p.sv += 9; p.vx += nx * 60; p.vy += ny * 60;
+  if (p.hp <= 0) popPod(p); else bitsBurst(p.x, p.y, 2, 50, p.type === 'gold' ? 2 : 1);
+}
+function popPod(p) {
+  p.dead = true; R.popped++; R.combo++; R.comboT = 1.4; R.best = Math.max(R.best, R.combo);
+  const gold = p.type === 'gold', n = clamp(Math.round(p.rel * 2.4), 1, 4);
+  const mul = 1 + Math.min(R.combo, 40) * .02 * lv('combo');
+  const each = Math.max(1, Math.round(layerVal(S.layer) * richMul() * p.rel * (gold ? 16 : 1) / n * mul * 1.6));
+  for (let i = 0; i < n; i++) R.drops.push({ x: p.x + rnd(-2, 2), y: p.y + rnd(-2, 2), vx: rnd(-55, 55), vy: rnd(-120, -30), val: each, ch: gold ? 2 : 0, r: gold ? 2.6 : 1.9 + Math.min(1, lv('rich') * .08) });
+  bitsBurst(p.x, p.y, 5, 80, gold ? 2 : 1);
+  R.rings.push({ x: p.x, y: p.y, r: p.r, life: .32, c: gold ? '#ffe07a' : '#d6ceff' });
+  bloop(note(Math.min(14, R.combo)), .22, .1); buzz(5); ui.combo();
+  if (gold) popup(p.x, p.y - 8, 'gold!', 'gold');
+  if (lv('splash')) R.queue.push({ t: .075, x: p.x, y: p.y, rad: 13 + lv('splash') * 4.5, dmg: dmgNow() * .5 });
+  if (p.type === 'bomb') { R.queue.push({ t: .05, x: p.x, y: p.y, rad: 40, dmg: dmgNow() * 5, boom: true }); R.freeze = .06; }
+  if (lv('tad') && !(R.src && R.src.mini) && Math.random() < .06 * lv('tad')) addBall(p.x, p.y, rnd(-70, 70), -rnd(90, 150), { mini: true });
+  if (R.popped === R.total && !R.cleared) {   // every pod gone in one round: go deeper
+    R.cleared = true; R.slow = 1.2;
+    const bonus = Math.round(R.value * (.5 + .15 * R.left)); R.left = 0;
+    for (let i = 0; i < 14; i++) R.drops.push({ x: rnd(10, GW - 10), y: rnd(60, GH * .5), vx: rnd(-40, 40), vy: rnd(-90, 0), val: Math.ceil(bonus / 14), ch: 2, r: 2.6 });
+    toast(`DEPTH ${S.layer}\nCLEARED`); arpeggio(5, 9, 85); shake(5); buzz([20, 40, 20, 40, 60]); ui.pips();
+  }
+  ui.bar();
+}
+
+function stepBall(b, dt, live) {
+  b.vy += GRAV * dt; b.x += b.vx * dt; b.y += b.vy * dt;
+  if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx) * .8; } else if (b.x > GW - b.r) { b.x = GW - b.r; b.vx = -Math.abs(b.vx) * .8; }
+  if (b.y < b.r + 22) { b.y = b.r + 22; b.vy = Math.abs(b.vy) * .6; }
+  const e = .6 + .07 * lv('bounce');
+  for (const p of R.pods) {
+    if (p.dead || p.born < .1) continue;
+    const dx = b.x - p.x, dy = b.y - p.y, rr = b.r + p.r; if (dx * dx + dy * dy >= rr * rr) continue;
+    const d = Math.hypot(dx, dy) || .01, nx = dx / d, ny = dy / d, vn = b.vx * nx + b.vy * ny;
+    if (live && b.plough > 0 && p.hp <= b.dmg && p.type !== 'bomb') { b.plough--; hitPod(b, p, nx, ny, true); b.vx *= .95; b.vy *= .95; continue; }
+    b.x = p.x + nx * rr; b.y = p.y + ny * rr;
+    if (vn < 0) {
+      b.vx -= (1 + e) * vn * nx; b.vy -= (1 + e) * vn * ny;
+      const o = b.vx * nx + b.vy * ny; if (o < 22) { b.vx += nx * (22 - o) + (live ? rnd(-6, 6) : 0); b.vy += ny * (22 - o); }
+      if (vn > -30) continue;   // a soft touch just slides off; only a real knock counts
+      if (live) hitPod(b, p, nx, ny); else return true;
+    }
+  }
+  const sp = Math.hypot(b.vx, b.vy); if (sp > 430) { b.vx *= 430 / sp; b.vy *= 430 / sp; }
+}
+function hitPod(b, p, nx, ny, through) {
+  b.hits++; b.sq = 1;
+  if (p.hp > b.dmg) { R.combo++; R.comboT = 1.4; R.best = Math.max(R.best, R.combo); bloop(note(Math.min(14, R.combo)), .14, .07); ui.combo(); }
+  R.src = b; damage(p, b.dmg, -nx, -ny); R.src = null;
+  if (!b.split && lv('twin')) {
+    b.split = true; const sp = Math.hypot(b.vx, b.vy), a0 = Math.atan2(b.vy, b.vx);
+    for (let k = 1; k <= lv('twin'); k++) { const a = a0 + (k % 2 ? 1 : -1) * .5 * Math.ceil(k / 2); addBall(b.x, b.y, Math.cos(a) * sp, Math.sin(a) * sp, { split: true }); }
+    R.rings.push({ x: b.x, y: b.y, r: 4, life: .3, c: '#b8e6ff' }); bloop(note(7), .2, .1);
+  }
+}
+
+function update(rdt) {
+  now += rdt;
+  if (!R) return;
+  if (R.freeze > 0) { R.freeze -= rdt; return; }
+  let dt = rdt; if (R.slow > 0) { R.slow -= rdt; dt *= .3; }
+  R.t += dt; R.cool -= dt;
+  if ((R.comboT -= dt) <= 0 && R.combo) { R.combo = 0; ui.combo(); }
+
+  for (const p of R.pods) {
+    p.born += dt; p.sv += (-260 * p.s - 9 * p.sv) * dt; p.s += p.sv * dt * .1;
+    p.vx += (-300 * p.ox - 10 * p.vx) * dt; p.vy += (-300 * p.oy - 10 * p.vy) * dt; p.ox += p.vx * dt; p.oy += p.vy * dt;
+    p.r += (podR(hits(p)) + (p.type === 'bomb' ? 1.5 : 0) - p.r) * Math.min(1, dt * 12);
+  }
+  for (const q of R.queue) if ((q.t -= dt) <= 0) {
+    q.done = true; R.rings.push({ x: q.x, y: q.y, r: q.rad * .5, life: .25, c: q.boom ? '#fff3bf' : '#74bcff', grow: q.rad * 2.4 });
+    if (q.boom) { shake(6); bloop(62, .4, .28); buzz(30); bitsBurst(q.x, q.y, 12, 150, 2); }
+    for (const p of R.pods) if (!p.dead) { const dx = p.x - q.x, dy = p.y - q.y, d = Math.hypot(dx, dy); if (d < q.rad + p.r * .5) damage(p, q.dmg, dx / (d || 1), dy / (d || 1)); }
+  }
+  R.queue = R.queue.filter(q => !q.done);
+
+  if (R.state === 'play' && lv('leak') && R.popped < R.total && (R.left > 0 || R.balls.some(b => !b.leak)) && R.shots > 0 && R.leaks < lv('leak') * 4 && (R.leakT -= dt) <= 0) {
+    R.leaks++; R.leakT = 1.2; addBall(rnd(14, GW - 14), 26, rnd(-20, 20), 30, { mini: true, leak: true });
+  }
+
+  for (const b of R.balls) {
+    b.age += dt; b.sq = Math.max(0, b.sq - dt * 6);
+    for (let k = 0; k < 2; k++) stepBall(b, dt / 2, true);
+    if ((b.trail -= dt) <= 0) { b.trail = .03; R.bits.push({ x: b.x, y: b.y, vx: 0, vy: 0, r: b.r * .6, ch: 0, shrink: 9 }); }
+    if (b.age > 12) { b.vy += 260 * dt; b.vx *= 1 - dt; }
+    if (b.y > pool.top(b.x) - b.r * .3 && b.vy > 0) {
+      if (b.skips > 0) {
+        b.skips--; b.vy = -Math.max(200, b.vy * .9); pool.splash(b.x, 120); bitsBurst(b.x, pool.top(b.x), 6, 110, 0, true);
+        R.rings.push({ x: b.x, y: pool.top(b.x), r: 5, life: .3, c: '#b8e6ff' }); bloop(note(4), .3, .14); buzz(10);
+      } else { b.dead = true; pool.splash(b.x, 90); bitsBurst(b.x, pool.top(b.x), b.mini ? 2 : 5, 90, 0, true); bloop(98, .25, b.mini ? .05 : .13); }
+    }
+  }
+  R.balls = R.balls.filter(b => !b.dead);
+
+  for (const d of R.drops) {
+    d.vy += 300 * dt; d.vx *= 1 - dt; d.x += d.vx * dt; d.y += d.vy * dt;
+    if (d.x < 2) { d.x = 2; d.vx = Math.abs(d.vx); } else if (d.x > GW - 2) { d.x = GW - 2; d.vx = -Math.abs(d.vx); }
+    if (d.y > pool.top(d.x) && d.vy > 0) {
+      d.dead = true; R.haul += d.val; R.got += d.val; pool.splash(d.x, 16);
+      bloop(note(5 + (R.plops++ % 10)), .07, .03);
+      if (d.ch === 2) popup(d.x, pool.top(d.x) - 8, '+' + fmt(d.val), 'gold');
+    }
+  }
+  R.drops = R.drops.filter(d => !d.dead);
+  for (const b of R.bits) { if (b.g) b.vy += b.g * dt; b.x += b.vx * dt; b.y += b.vy * dt; b.r -= dt * b.shrink; if (b.vy > 0 && b.y > pool.top(clamp(b.x, 0, GW - 1)) + 2) b.r = 0; }
+  R.bits = R.bits.filter(b => b.r > .4);
+  for (const r of R.rings) { r.life -= dt; r.r += (r.grow || 40) * dt; }
+  R.rings = R.rings.filter(r => r.life > 0);
+  pool.update(dt, 12 + 54 * (1 - Math.exp(-1.6 * R.haul / Math.max(1, R.value))));
+
+  if (R.state === 'play') {
+    const idle = !R.balls.length && !R.drops.length && !R.queue.length;
+    if (R.left === 0 && idle) { if ((R.endT += dt) > .4) { R.state = 'tally'; R.rate = Math.max(1, R.haul) / .8; R.tick = 0; } } else R.endT = 0;
+  } else if (R.state === 'tally') {
+    const amt = Math.min(R.haul, R.rate * dt); R.haul -= amt; S.goo += amt;
+    if ((R.tick -= dt) <= 0 && amt > 0) { R.tick = .05; bloop(note(8 + (R.plops++ % 7)), .06, .05); }
+    if (R.haul <= .001) {
+      R.haul = 0; S.goo = Math.round(S.goo); S.rounds++;
+      R.pct = Math.round(R.popped / R.total * 100);
+      if (R.cleared) { S.layer++; S.best = 0; } else S.best = Math.max(S.best, R.pct);
+      save(); R.state = 'shop'; ui.shop();
+    }
+  }
+}
+
+function draw() {
+  surf = true; pool.draw();
+  for (const p of R.pods) {
+    if (p.dead) continue;
+    const k = clamp(p.born / .18, 0, 1), r = p.r * (1 + p.s) * (k < 1 ? k * (1.3 - .3 * k) : 1); if (r <= 0) continue;
+    const pulse = p.type === 'bomb' ? Math.sin(now * 7) * .6 : 0;
+    ball(p.x + p.ox, p.y + p.oy, r + pulse, p.type === 'gold' ? 2 : 1);
+    if (r > 5) orb(p.x + p.ox, p.y + p.oy, r + 1.5);
+  }
+  for (const d of R.drops) { ball(d.x, d.y, d.r, d.ch); ball(d.x - d.vx * .02, d.y - d.vy * .02, d.r * .6, d.ch); }
+  for (const b of R.bits) ball(b.x, b.y, b.r, b.ch);
+  for (const b of R.balls) {
+    ball(b.x, b.y, b.r + b.sq * .8); ball(b.x - b.vx * .012, b.y - b.vy * .012, b.r * .75);
+    if (b.r > 3.5) orb(b.x, b.y, b.r + 1.5);
+  }
+  // the tap: a gold nozzle with the next drop hanging from it
+  ball(LX, LY - 11, 9, 2); ball(LX, LY - 4, 5, 2); orb(LX, LY - 11, 10);
+  if (R.left > 0 && R.state === 'play') {
+    const grow = clamp(1 - R.cool / .22, .2, 1), a = aim ? aim.a : Math.PI / 2, st = aim ? 3 : 1 + Math.sin(now * 3) * .8;
+    const r = (4 + lv('fat') * .7) * grow;
+    ball(LX + Math.cos(a) * st, LY + 2 + Math.sin(a) * st, r); ball(LX, LY - 1, r * .7);
+    orb(LX + Math.cos(a) * st, LY + 2 + Math.sin(a) * st, r + 1.5);
+  }
+}
+function post() {
+  for (const p of R.pods) {
+    if (p.dead || p.born < .18) continue; const x = p.x + p.ox, y = p.y + p.oy;
+    if (p.type === 'bomb') { ctx.fillStyle = (now * 4 | 0) & 1 ? '#fff' : '#ffc944'; ctx.fillRect(x - 2 | 0, y | 0, 5, 1); ctx.fillRect(x | 0, y - 2 | 0, 1, 5); }
+    else { const h = hits(p); if (h > 1) num(x + .5, y + .5, Math.min(99, h), '#1c1147'); }
+  }
+  for (const r of R.rings) ring(r.x, r.y, r.r, r.c);
+  for (const b of R.balls) if (!b.mini) eyes(b.x, b.y - .5, 1, clamp(b.vx * .01, -1, 1), clamp(b.vy * .006, -1, 1), false);
+  if (R.left > 0 && R.state === 'play') { const a = aim ? aim.a : Math.PI / 2; eyes(LX + Math.cos(a) * 2, LY + 1.5 + Math.sin(a) * 2, 1, 0, 0, now % 3.6 < .13, !!aim); }
+  if (aim && R.left > 0 && R.state === 'play') {   // dotted preview of the shot
+    const g = { x: LX + Math.cos(aim.a) * 8, y: LY + Math.sin(aim.a) * 8, vx: Math.cos(aim.a) * SPEED, vy: Math.sin(aim.a) * SPEED, r: 4 + lv('fat') * .7 };
+    let after = -1; const steps = 90 + lv('aim') * 60, extra = 8 + lv('aim') * 26;
+    for (let i = 0; i < steps; i++) {
+      if (stepBall(g, 1 / 120, false) && after < 0) after = i;
+      if (after >= 0 && i - after > extra) break;
+      if (g.y > pool.top(g.x)) break;
+      if (i % 5 === (now * 24 | 0) % 5) { ctx.fillStyle = after >= 0 ? '#74bcff' : '#ffffff'; ctx.fillRect(g.x | 0, g.y | 0, i < 30 && after < 0 ? 2 : 1, i < 30 && after < 0 ? 2 : 1); }
+    }
+  }
+}
+
+// ══════════════════════════ UI ══════════════════════════
+let shownGoo = 0, freshIds = [];
+const ui = {
+  round() { $('depth').textContent = 'depth ' + S.layer; this.pips(); this.bar(); this.combo(); if (S.rounds === 0 && !BOT) { $('hint').textContent = 'drag to aim\nlet go to drop'; $('hint').classList.add('on'); } },
+  pips() { if (BOT) return; const n = maxDrops(); $('pips').innerHTML = Array.from({ length: n }, (_, i) => `<i class="dot${i >= R.left ? ' used' : ''}"></i>`).join(''); },
+  bar() { if (BOT) return; $('bar').firstChild.style.width = (R.total ? R.popped / R.total * 100 : 0) + '%'; },
+  combo() {
+    if (BOT) return; const c = $('combo');
+    if (R.combo >= 3) { c.innerHTML = R.combo + '<small>combo</small>'; c.classList.add('on'); c.classList.remove('bump'); void c.offsetWidth; c.classList.add('bump'); }
+    else c.classList.remove('on');
+  },
+  shop() {
+    if (BOT) return;
+    $('res').firstChild.textContent = '+' + fmt(R.got);
+    $('res').lastChild.textContent = R.cleared ? `cleared! going down to depth ${S.layer}` : `popped ${R.pct}% · best ${S.best}%\npop every pod in one round to go deeper`;
+    $('res').lastChild.style.whiteSpace = 'pre-line';
+    this.cards(); $('combo').classList.remove('on'); $('sheet').classList.add('open');
+  },
+  cards(boughtId) {
+    const box = $('cards'), y = box.scrollTop;
+    box.innerHTML = '';
+    for (const u of UP) {
+      const l = lv(u.id), isOpen = open(u), c = cost(u), maxed = l >= u.max, can = isOpen && !maxed && S.goo >= c;
+      const el = document.createElement('div');
+      el.className = 'card' + (!isOpen ? ' locked' : maxed ? ' maxed' : can ? ' can' : ' poor');
+      if (isOpen && !S.seen[u.id]) { S.seen[u.id] = 1; if (u.depth) { el.classList.add('fresh'); el.dataset.fresh = 1; } }
+      if (u.id === boughtId) el.classList.add('bought');
+      const pips = u.max <= 7 ? `<span class="pipr">${Array.from({ length: u.max }, (_, i) => `<i class="${i < l ? 'f' : ''}"></i>`).join('')}</span>` : `<span style="color:var(--dim);font-weight:400">lv ${l}</span>`;
+      if (!isOpen) el.innerHTML = `<div class="t"><div class="n">? ? ?</div><div class="d">found at depth ${u.depth}</div></div>`;
+      else {
+        el.innerHTML = `<div class="t"><div class="n">${u.name} ${pips}${el.dataset.fresh ? '<span class="tag">new</span>' : ''}</div><div class="d">${u.desc}</div></div><button>${maxed ? 'max' : fmt(c)}</button>`;
+        el.lastChild.onclick = () => buy(u);
+      }
+      box.appendChild(el);
+    }
+    box.scrollTop = y;
+  },
+};
+function buy(u) {
+  const c = cost(u); if (!open(u) || lv(u.id) >= u.max || S.goo < c) { bloop(110, .1, .06); return false; }
+  S.goo -= c; S.up[u.id] = lv(u.id) + 1; save();
+  arpeggio(4 + Math.min(6, lv(u.id)), 3); buzz(12); if (!BOT) { ui.cards(u.id); ui.pips(); }
+  return true;
+}
+$('go').onclick = () => { initAudio(); $('sheet').classList.remove('open'); newRound(); bloop(note(2), .2, .1); };
+$('reset').onclick = () => { if (confirm('Start over from nothing?')) { try { localStorage.removeItem(SAVE); } catch (_) {} location.reload(); } };
+$('mute').onclick = () => { initAudio(); muted = !muted; if (master) master.gain.value = muted ? 0 : .9; $('mute').style.opacity = muted ? .4 : 1; save(); };
+$('mute').style.opacity = muted ? .4 : 1;
+
+// aiming: touch anywhere, the shot points from the tap toward your finger
+function aimAt(e) {
+  const r = cv.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * GW, y = Math.max(LY + 6, (e.clientY - r.top) / r.height * GH);
+  aim = { a: clamp(Math.atan2(y - LY, x - LX), .09 * Math.PI, .91 * Math.PI) };
+}
+cv.addEventListener('pointerdown', e => { initAudio(); if (R.state !== 'play') return; try { cv.setPointerCapture(e.pointerId); } catch (_) {} aimAt(e); });
+cv.addEventListener('pointermove', e => { if (aim) aimAt(e); });
+cv.addEventListener('pointerup', e => { if (!aim) return; aimAt(e); fire(aim.a); aim = null; });
+cv.addEventListener('pointercancel', () => { aim = null; });
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('visibilitychange', () => { last = performance.now(); });
+
+// ══════════════════════════ loop ══════════════════════════
 let last = performance.now();
 function frame(t) {
   const dt = Math.min(1 / 30, (t - last) / 1000); last = t;
-  step(dt);
-  f.globalCompositeOperation = 'source-over'; f.fillStyle = '#000'; f.fillRect(0, 0, W, H);
-  f.globalCompositeOperation = 'lighter';
-  orbs.length = 0; surf = cur.pool ? surfArr : null;
-  cur.draw(); render(dt); cur.post && cur.post();
+  if (AUTO) autoFire();
+  update(dt);
+  f.globalCompositeOperation = 'source-over'; f.fillStyle = '#000'; f.fillRect(0, 0, GW, GH);
+  f.globalCompositeOperation = 'lighter'; orbs.length = 0;
+  draw(); render(dt); post();
   shakeAmt *= Math.pow(.0005, dt);
   cv.style.transform = shakeAmt > .3 ? `translate(${rnd(-1, 1) * shakeAmt}px,${rnd(-1, 1) * shakeAmt}px)` : '';
-  $('goo').textContent = fmt(cur.goo); $('sub').textContent = cur.sub ? cur.sub() : '';
-  for (const [b, it] of buttons) {
-    const c = it.cost(cur), ok = !it.can || it.can(cur);
-    const left = it.label(cur) + (it.lv ? `  ${it.lv(cur)}` : ''), right = ok ? fmt(c) : 'max';
-    if (b.firstChild.textContent !== left) b.firstChild.textContent = left;
-    if (b.lastChild.textContent !== right) b.lastChild.textContent = right;
-    b.disabled = !ok || cur.goo < c;
-  }
+  const target = S.goo; shownGoo += (target - shownGoo) * Math.min(1, dt * 14); if (Math.abs(target - shownGoo) < .6) shownGoo = target;
+  $('goo').textContent = fmt(Math.round(shownGoo));
   requestAnimationFrame(frame);
 }
-start(clamp((+location.hash.slice(1) || 1) - 1, 0, demos.length - 1));
-if (AUTO) for (let i = 0; i < 60 * (+new URLSearchParams(location.search).get('auto') || 8); i++) step(1 / 60);
-requestAnimationFrame(frame);
+
+function autoFire() { if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .8) { fire(rnd(.3, .7) * Math.PI); aim = R.left > 0 ? { a: 1.1 } : null; } }
+// headless balance bot: plays N rounds with rough aim and buys the cheapest thing
+function runBot(n) {
+  const log = []; let secs = 0;
+  for (let k = 0; k < n; k++) {
+    newRound(); R.h0 = (R.pods.reduce((a, p) => a + hits(p), 0) / R.total).toFixed(1); let steps = 0;
+    while (R.state !== 'shop' && steps++ < 60 * 120) {
+      if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .7) { const live = R.pods.filter(p => !p.dead), p = live[Math.random() * live.length | 0]; fire(clamp((p ? Math.atan2(p.y - LY, p.x - LX) : 1.57) + rnd(-.12, .12), .3, 2.84)); }
+      update(1 / 60);
+    }
+    secs += steps / 60 + 5;
+    const got = R.got, pct = R.pct, cleared = R.cleared, bought = [];
+    for (;;) { const c = UP.filter(u => open(u) && lv(u.id) < u.max && cost(u) <= S.goo).sort((a, b) => cost(a) - cost(b))[0]; if (!c) break; buy(c); bought.push(c.id); }
+    log.push(`r${k + 1} h=${R.h0} t=${(secs / 60).toFixed(1)}m L${S.layer}${cleared ? '*' : ''} pods=${R.total} pop=${pct}% combo=${R.best} got=${got} goo=${S.goo} buy=${bought.join(',')}`);
+  }
+  $('botlog').textContent = log.join('\n');
+}
+
+fit(); addEventListener('resize', () => { if (fit() && R) { pool = makePool(); if (R.state === 'play' && !R.shots) newRound(); } });
+if (BOT) runBot(BOT); else {
+  newRound(); shownGoo = S.goo;
+  if (AUTO) for (let i = 0; i < 60 * (+params.get('auto') || 3) && R.state !== 'shop'; i++) { autoFire(); update(1 / 60); }   // pre-roll for screenshots
+  requestAnimationFrame(frame);
+}
 </script>
 </body>
 </html>
