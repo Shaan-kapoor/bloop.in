@@ -9,4 +9,4 @@ compatibility_date = "2025-09-01"
 [[d1_databases]]
 binding = "DB"
 database_name = "bloop-in"
-database_id = "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+database_id = "6376aaa2-3123-4d6a-92a4-5c3e621fd8d5"
