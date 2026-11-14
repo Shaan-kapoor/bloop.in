@@ -3,7 +3,7 @@
 const stage = $('stage');
 const rebump = (el, cls) => { el.classList.remove(cls); void el.offsetWidth; el.classList.add(cls); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-let shownGoo = 0, theme = -1, lastDepth = 0, tileEls = {};
+let shownGoo = 0, theme = -1, lastDepth = 0, tileEls = {}, streak = 0, lastBuy = 0;
 
 // a little burst of droplets (or hearts) flying out of an element
 function burst(el, n = 9, cls = '') {
@@ -17,6 +17,26 @@ function burst(el, n = 9, cls = '') {
 function countUp(el, to, pre = '') {
   const t0 = performance.now(); const step = t => { const k = Math.min(1, (t - t0) / 650); el.textContent = pre + fmt(to * (1 - (1 - k) ** 3)); if (k < 1 && el.isConnected) requestAnimationFrame(step); };
   step(t0);
+}
+
+// goo flies from one element to another, e.g. from your counter into the upgrade you bought
+function fly(from, to, n = 5) {
+  if (BOT || !from.animate) return; const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), h = stage.getBoundingClientRect();
+  for (let i = 0; i < n; i++) {
+    const s = document.createElement('i'), x0 = a.left - h.left + a.height / 2, y0 = a.top - h.top + a.height / 2;
+    const dx = b.left - h.left + b.width * rnd(.25, .75) - x0, dy = b.top - h.top + b.height / 2 - y0;
+    s.className = 'dot fly'; s.style.cssText = `left:${x0}px;top:${y0}px`; stage.appendChild(s);
+    s.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${dx * .5 + rnd(-40, 40)}px,${dy * .5 - rnd(10, 60)}px) scale(1.4)`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(.6)` }],
+      { duration: 340 + i * 50, easing: 'cubic-bezier(.4,0,.7,1)' }).onfinish = () => s.remove();
+  }
+}
+// hold a tile to keep buying, faster and faster
+function holdToBuy(el, u) {
+  let t = 0, gap = 0; const stop = () => { clearTimeout(t); t = 0; };
+  const again = () => { el._held = true; if (!buy(u)) return stop(); gap = Math.max(70, gap * .82); t = setTimeout(again, gap); };
+  el.onpointerdown = () => { stop(); el._held = false; gap = 260; t = setTimeout(again, 420); };
+  el.onpointerup = el.onpointerleave = el.onpointercancel = stop;
+  el.onclick = () => { if (el._held) el._held = false; else buy(u); };
 }
 
 // ── pixel icons: 16×16, drawn in code, three tones per colour ──
@@ -49,7 +69,7 @@ const ICON = {
 const icons = {}, ico = id => icons[id] || (icons[id] = makeIcon(ICON[id]));
 
 // ── HUD and the upgrade sheet ──
-const notesOpen = () => Math.min(NOTES.length, S.deep - 1);
+const notesOpen = () => S.moon ? NOTES.length : Math.min(NOTES.length, S.deep - 1);
 function zoneBanner() {
   if (BOT || stage.classList.contains('cine')) return;
   $('zone').innerHTML = `<small>depth ${S.layer}</small>${ZONES[theme]}`; rebump($('zone'), 'on'); sfx.zone();
@@ -95,8 +115,8 @@ const ui = {
     const isNew = u => u.depth && !S.seen[u.id], opened = UP.filter(open), locked = UP.filter(u => !open(u));
     for (const u of [...opened.filter(isNew), ...opened.filter(u => !isNew(u))]) {
       const el = document.createElement('button'); el.style.setProperty('--i', i++); el._new = isNew(u);
-      el.innerHTML = `<span class="top"><img class="ico" src="${ico(u.id)}" alt=""><span class="lv"></span></span><span class="nm">${u.name}${el._new ? '<i class="tag">new</i>' : ''}</span><span class="ds">${u.desc}</span><span class="fx"></span><span class="price"><i class="dot"></i><b></b></span>`;
-      el.onclick = () => buy(u); tileEls[u.id] = el; box.appendChild(el);
+      el.innerHTML = `<span class="top"><img class="ico" src="${ico(u.id)}" alt=""><span class="lv"></span></span><span class="nm">${u.name}${el._new ? '<i class="tag">new</i>' : ''}</span><span class="ds">${u.desc}</span><span class="fx"></span><span class="price"><i class="dot"></i><b></b><small></small></span>`;
+      holdToBuy(el, u); tileEls[u.id] = el; box.appendChild(el);
     }
     if (locked.length) wide('locked', '', '? ? ?', `something new waits at depth ${locked[0].depth}`);
     const pe = pearlsFor(S.layer);
@@ -111,11 +131,12 @@ const ui = {
       const el = tileEls[u.id]; if (!el) continue;
       const l = lv(u.id), c = cost(u), maxed = l >= u.max, can = !maxed && S.goo >= c;
       el.className = `tile ${u.cat} ${maxed ? 'maxed' : can ? 'can' : 'poor'}${el._new ? ' fresh' : ''}`;
-      el.querySelector('.lv').innerHTML = u.max <= 7 ? Array.from({ length: u.max }, (_, k) => `<i class="${k < l ? 'f' : ''}"></i>`).join('') : 'lv ' + l;
+      el.querySelector('.lv').innerHTML = u.max <= 7 ? Array.from({ length: u.max }, (_, k) => `<i class="${k < l ? 'f' : ''}${k === l - 1 && u.id === boughtId ? ' nu' : ''}"></i>`).join('') : 'lv ' + l;
       const [a, b] = fxPair(u.fx(l), u.fx(l + 1)); el.querySelector('.fx').innerHTML = maxed ? `<b>${u.fx(l)}</b>` : `${a}<i>→</i><b>${b}</b>`;
       el.querySelector('.price b').textContent = maxed ? 'max' : fmt(c);
+      el.querySelector('.price small').textContent = !maxed && !can && S.goo >= c * .5 ? fmt(c - S.goo) + ' to go' : '';
       el.style.setProperty('--p', maxed ? '100%' : Math.min(100, S.goo / c * 100) + '%');
-      if (u.id === boughtId) { rebump(el, 'hit'); burst(el, 6); }
+      if (u.id === boughtId) rebump(el, 'hit');
     }
   },
 };
@@ -130,7 +151,9 @@ function buy(u) {
   if (u.id === 'bomb' && plain.length) toType(pick(), 'bomb');
   if (u.id === 'tad') S.sure.tad = 1;
   if (u.id === 'drops') R.left = maxDrops();
-  save(); sfx.buy(lv(u.id)); buzz(12); if (!BOT) { ui.refresh(u.id); ui.pips(); }
+  const t = performance.now(); streak = t - lastBuy < 2500 ? streak + 1 : 0; lastBuy = t;
+  save(); sfx.buy(streak); buzz(12);
+  if (!BOT) { if (tileEls[u.id]) fly($('goo'), tileEls[u.id].querySelector('.price')); ui.refresh(u.id); ui.pips(); }
   return true;
 }
 $('go').onclick = () => { initAudio(); $('sheet').classList.remove('open'); startPlay(); sfx.tap(); sfx.sheet(false); };
@@ -232,15 +255,38 @@ $('wipeBtn').onclick = () => { if (confirm('Erase all progress? This cannot be u
 const heartLine = n => `${n} ♥ sent` + (n >= 100 ? '. the moon noticed.' : n >= 50 ? ". that's a lot of love." : n >= 10 ? '. bloop feels it.' : '');
 $('heart').onclick = () => { S.hearts++; save(); rebump($('heart'), 'hit'); burst($('heart'), 5, 'h'); sfx.heart(S.hearts); buzz(10); $('hearts').textContent = heartLine(S.hearts); };
 
+// ── cheat codes ──
+const CHEATS = {
+  gloop: () => { S.goo = Math.round(S.goo * 10 + 1000); return 'goo. lots of it.'; },
+  deeper: () => jump(1, 'one depth down.'),
+  abyss: () => jump(10, 'ten depths down.'),
+  pearl: () => { S.pearls++; return 'a pearl rolls in.'; },
+  rain: () => { if (R.state !== 'play') return 'that one only works mid-round.'; R.left += 5; return 'five more drops this round.'; },
+  moon: () => { S.moon = 1; return 'every note washes up at once.'; },
+};
+function jump(n, text) {
+  S.layer += n; S.deep = Math.max(S.deep, S.layer); S.best = 0;
+  setTimeout(() => { menu.close(); newRound({ got: 0, pct: 0, left: 9, cleared: true, combo: 0, total: 1 }); }, 600);
+  return text;
+}
+function cheat() {
+  const box = $('cheatIn'), fn = CHEATS[box.value.trim().toLowerCase()], msg = $('cheatMsg');
+  if (!fn) { msg.textContent = box.value.trim() ? 'nothing happens.' : ''; rebump($('cheatBtn'), 'no'); sfx.deny(); return; }
+  msg.textContent = fn(); S.cheat = 1; box.value = ''; save(); sfx.buy(8); buzz(20); burst($('cheatBtn'), 6);
+  ui.round(); if ($('sheet').classList.contains('open')) ui.refresh();
+}
+$('cheatBtn').onclick = cheat; $('cheatIn').onkeydown = e => { if (e.key === 'Enter') cheat(); };
+
 // ── wordmark: the dot hops when you poke it ──
 function logoInto(el) {
   el.innerHTML = 'bloop<i></i>in'; let n = 0;
   el.onpointerdown = e => { e.stopPropagation(); initAudio(); rebump(el, 'hop'); sfx.letter(n++ % 8); buzz(6); };
 }
-['logoBig', 'logoSm', 'logoCr'].forEach(id => logoInto($(id)));
+['logoSm', 'logoCr'].forEach(id => logoInto($(id)));
 
 // ── title and intro ──
 function enterGame() {
+  titleOn = false;
   stage.classList.remove('cine', 'story'); $('story').classList.remove('on');
   ui.round(); zoneBanner(); netDive(true);
 }
@@ -250,8 +296,8 @@ function showTitle() {
   let gone = false;
   $('title').onclick = () => {
     if (gone) return; gone = true; initAudio();
-    $('logoBig').classList.add('fall'); sfx.fire(); setTimeout(() => sfx.sink(GW / 2, true), 520);   // the dot drips off the name
-    setTimeout(() => { $('title').classList.add('off'); S.intro ? enterGame() : runIntro(); }, 650);
+    dropLogo(); sfx.fire(); $('title').classList.add('off');   // the name rains into the pool
+    setTimeout(() => S.intro ? enterGame() : runIntro(), 1400);
   };
 }
 // The opening: a drip wakes up at the tap. It ends by handing the first round to the player.

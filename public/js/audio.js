@@ -63,7 +63,8 @@ const sfx = {
   skip() { tone(260, .28, .13, { to: 2.2 }); noise(.2, .05, { type: 'lowpass', f: 1400, f2: 300 }); },
   split() { tone(note(7), .2, .09, { from: .5 }); tone(note(9), .2, .08, { from: .5, at: .05 }); },
   boom() { tone(95, .55, .3, { to: .32 }); tone(240, .35, .16, { to: .3, type: 'triangle' }); noise(.45, .24, { type: 'lowpass', f: 2600, f2: 200 }); },
-  buy(l) { const k = 5 + l % 5; tone(note(k), .3, .1, { type: 'triangle' }); tone(note(k) * 1.5, .4, .08, { type: 'triangle', at: .08 }); tone(note(k) * 2, .6, .07, { type: 'triangle', at: .16 }); noise(.3, .02, { type: 'highpass', f: 6000, at: .16 }); },
+  buy(l) { const k = 3 + Math.min(l, 10);   // a run of purchases climbs the scale
+    tone(note(k), .3, .1, { type: 'triangle' }); tone(note(k) * 1.5, .4, .08, { type: 'triangle', at: .08 }); tone(note(k) * 2, .6, .07, { type: 'triangle', at: .16 }); noise(.3, .02, { type: 'highpass', f: 6000, at: .16 }); },
   deny() { tone(230, .13, .08, { type: 'triangle', to: .75 }); },
   tap() { tone(660, .06, .05, { from: .8 }); },
   flick(on) { tone(on ? 620 : 420, .09, .06, { from: on ? .7 : 1.3 }); },

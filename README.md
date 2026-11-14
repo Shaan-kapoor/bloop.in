@@ -61,6 +61,7 @@ Because the game runs entirely in the browser, the board trusts what clients rep
 ## How it is made
 
 - **Goo.** Blobs are splatted into a 180-pixel-wide field, then every pixel is shaded from the field's value and slope: outline, rim light, shade, core and glint, with ordered dither between tones.
+- **Wordmark.** The name on the title screen is built from rows of small goo balls, so it is shaded by the same renderer as the drops and rains into the pool when you start.
 - **Wildlife.** Creatures are plain text characters drawn to a hidden canvas and stamped into the backdrop behind the goo.
 - **Sound.** All synthesised. Effects are water-drop bloops on a pentatonic scale, so chains climb in pitch. The soundtrack is eight slow bars in the same key, voiced so that only one or two notes move between chords, with a melody built from short repeating phrases.
 - **Physics.** Fixed steps. The aim line runs the same code as the drop, so the preview is exact.
@@ -97,3 +98,9 @@ Add these to the URL.
 | `?deep=12` | starts at depth 12 |
 | `?show=title` | with `auto`: also `intro`, `shop`, `note`, `Notes`, `Deep`, `Set` |
 | `?fakeworld` | fills the deep with sample data |
+| `?buy=drops,power` | with `auto`: buys upgrades through the UI |
+| `?cheat=gloop` | with `auto`: enters a cheat code |
+
+## Cheat codes
+
+Settings has a cheat code box. The codes are `gloop`, `deeper`, `abyss`, `pearl`, `rain` and `moon`. A save that has used one stays off the deep.
