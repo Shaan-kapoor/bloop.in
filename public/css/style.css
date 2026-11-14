@@ -209,3 +209,30 @@ input, textarea { font:500 calc(var(--u)*7.4)/1.4 var(--font); color:var(--ink);
 
 #botlog { display:none; }
 .still * { transition:none !important; animation-duration:.001s !important; animation-delay:0s !important; }   /* settled layout for screenshots */
+
+/* ── full screen button, and things only a mouse can do ── */
+#fsBtn { display:none; width:calc(var(--u)*20); height:calc(var(--u)*20); align-items:center; justify-content:center; color:var(--ink2); border:var(--hair) solid var(--line); border-radius:var(--r); }
+#fsBtn svg { width:calc(var(--u)*9); height:calc(var(--u)*9); } #fsBtn.on { color:var(--sky); border-color:var(--line2); }
+aside, .keys { display:none; }
+@media (hover:hover) and (pointer:fine) {
+  .tile:hover, .wide:hover, .btn:hover, #fsBtn:hover { border-color:var(--line2); }
+  .tile.can:hover .price, .wide:hover em, #go:hover { filter:brightness(1.08); }
+  .tabs button:hover, .nt:hover span { color:var(--ink); }
+}
+
+/* ── desktop ──
+   The play column in the middle is the phone game, untouched. The menu is
+   docked on its left and the upgrades on its right. ui.js adds .desk to the
+   body and gives each side its own --u, so the panels keep a sensible scale. */
+.desk #app { background:radial-gradient(ellipse at 50% 38%, color-mix(in srgb, var(--zone, #5b5ad0) 15%, var(--bg)), var(--bg) 72%); transition:background 1s; }
+.desk aside { display:block; flex:none; position:relative; width:var(--pw); height:100%; font-size:calc(var(--u)*8.4); --hair:calc(var(--u)*.6); --r:calc(var(--u)*3); transition:opacity .6s; }
+.desk #app:has(#stage.cine) aside { opacity:0; pointer-events:none; }   /* the title and the intro have the screen to themselves */
+.desk #stage { box-shadow:0 0 0 1px var(--line2), 0 0 90px #000a; }
+.desk canvas { cursor:crosshair; }
+.desk #menuBtn, .desk #menuX, .desk #shopBtn, .desk #grab { display:none; }
+.desk #fsBtn { display:flex; } .desk .keys { display:block; margin-top:calc(var(--u)*12); text-align:center; font-size:calc(var(--u)*6.6); color:var(--ink3); }
+.desk #menu, .desk #sheet { position:relative; inset:auto; height:100%; transform:none; transition:none; border-radius:0; box-shadow:none; z-index:auto; }
+.desk #menu { background:#07081ab3; border-right:1px solid var(--line); }
+.desk #sheet { background:#0c0d26b3; border:0; border-left:1px solid var(--line); padding-top:calc(var(--u)*5); }
+.desk #cards, .desk #foot { transition:opacity .3s; }
+.desk #sheet:not(.live) #cards, .desk #sheet:not(.live) #foot { opacity:.4; pointer-events:none; }   /* mid-round: look, don't buy */

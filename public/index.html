@@ -15,7 +15,7 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-<div id="app"><div id="stage" class="cine">
+<div id="app"><aside id="sideL"></aside><div id="stage" class="cine">
   <canvas id="c"></canvas>
   <div id="fx"></div>
 
@@ -45,7 +45,7 @@
 
   <!-- menu: notes, the deep, settings -->
   <div id="menu">
-    <div class="mh"><span class="logo sm" id="logoSm"></span><button id="menuX" aria-label="close">×</button></div>
+    <div class="mh"><span class="logo sm" id="logoSm"></span><button id="fsBtn" aria-label="full screen"><svg viewBox="0 0 16 16"><path d="M2 6V2h4M10 2h4v4M14 10v4h-4M6 14H2v-4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button><button id="menuX" aria-label="close">×</button></div>
     <div class="tabs"><button data-tab="Notes">notes</button><button data-tab="Deep">the deep</button><button data-tab="Set">settings</button><i id="tabInk"></i></div>
     <div class="pane" id="tabNotes"></div>
     <div class="pane" id="tabDeep"></div>
@@ -53,6 +53,7 @@
       <div class="row"><span>music</span><button class="sw" data-opt="music" aria-label="music"></button></div>
       <div class="row"><span>sounds</span><button class="sw" data-opt="sfx" aria-label="sounds"></button></div>
       <div class="row"><span>vibration<small id="buzzNote"></small></span><button class="sw" data-opt="buzz" aria-label="vibration"></button></div>
+      <div class="row" id="fsRow"><span>full screen</span><button class="sw" id="fsSw" aria-label="full screen"></button></div>
       <div class="row"><span>your name<small>other drops see this in the deep</small></span><input id="nameIn" maxlength="14" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
       <h4>save</h4>
       <p class="hintp">your dive saves itself on this device. a save code lets you carry it to another one.</p>
@@ -62,6 +63,7 @@
       <h4>cheat codes</h4>
       <div class="btns"><input id="cheatIn" placeholder="type a code" maxlength="16" autocomplete="off" autocapitalize="off" spellcheck="false"><button id="cheatBtn" class="btn">enter</button></div>
       <p class="hintp" id="cheatMsg"></p>
+      <p class="keys">space: drop · 1–9: buy · shift: speed up · f: full screen</p>
       <div id="credits">
         <span class="logo" id="logoCr"></span>
         <p>made by <b>SHAAN</b> with <button id="heart" aria-label="love">♥</button></p>
@@ -83,7 +85,7 @@
     <button id="diveBtn">tap to dive</button>
     <p class="who">made by shaan</p>
   </div>
-</div></div>
+</div><aside id="sideR"></aside></div>
 <pre id="botlog"></pre>
 
 <script src="js/render.js"></script>

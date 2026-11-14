@@ -7,17 +7,36 @@ function aimAt(e) {
   aim = { a: clamp(Math.atan2(Math.max(LY + 6, y) - LY, x - LX), .09 * Math.PI, .91 * Math.PI), cancel: y < LY - 8 };
 }
 cv.addEventListener('pointerdown', e => {
-  initAudio(); held = true; if (R.state !== 'play' || aimId !== null) return;
+  initAudio(); held = true; if (desk && R.state === 'shop') { $('go').click(); return; }   // desktop: clicking the water starts the round
+  if (R.state !== 'play' || aimId !== null) return;
   aimId = e.pointerId; try { cv.setPointerCapture(e.pointerId); } catch (_) {} aimAt(e);
 });
-cv.addEventListener('pointermove', e => { if (e.pointerId === aimId) aimAt(e); });
+cv.addEventListener('pointermove', e => { if (e.pointerId === aimId || e.pointerType === 'mouse' && aimId === null && R.state === 'play') aimAt(e); });   // a mouse aims just by moving
+cv.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse' && aimId === null) aim = null; });
 cv.addEventListener('pointerup', e => {
   held = false; if (e.pointerId !== aimId) return; aimId = null; aimAt(e);
   if (!aim.cancel && R.state === 'play' && R.left > 0 && !fire(aim.a)) R.pending = aim.a;   // a tap that lands a moment early still counts
-  aim = null;
+  aim = null; if (e.pointerType === 'mouse') aimAt(e);
 });
 cv.addEventListener('pointercancel', () => { aim = null; aimId = null; held = false; });
 document.addEventListener('contextmenu', e => e.preventDefault());
+// keyboard: space or enter moves things along, 1-9 buy, shift hurries the last drops, f is full screen
+addEventListener('keydown', e => {
+  if (/INPUT|TEXTAREA|BUTTON/.test(e.target.tagName) || e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = e.key, cine = stage.classList.contains('cine');
+  if (k === 'Shift') held = true;
+  else if (k === 'f' || k === 'F') toggleFs();
+  else if (k === 'Escape' && $('note').classList.contains('on')) $('noteOk').click();
+  else if (k === ' ' || k === 'Enter') {
+    e.preventDefault(); if (e.repeat) return; initAudio();
+    if ($('note').classList.contains('on')) $('noteOk').click();
+    else if (!$('title').classList.contains('off')) $('title').click();
+    else if ($('story').classList.contains('on')) $('story').click();
+    else if (!cine && R.state === 'shop') $('go').click();
+  } else if (k >= '1' && k <= '9' && !e.repeat && !cine && shopLive()) { const el = document.querySelectorAll('#cards .tile')[+k - 1]; if (el) { initAudio(); el.click(); } }
+});
+addEventListener('keyup', e => { if (e.key === 'Shift') held = false; });
+document.addEventListener('click', e => { const b = e.target.closest('button'); if (b && e.detail) b.blur(); });   // so a mouse click never leaves a button holding the keyboard
 document.addEventListener('touchstart', () => {}, { passive: true });   // lets :active press states show on iOS
 document.addEventListener('visibilitychange', () => { last = performance.now(); if (ac) document.hidden ? ac.suspend() : ac.resume(); });
 
@@ -41,6 +60,7 @@ function frame(t) {
     $('haul').textContent = R.got > 0 && R.state !== 'shop' ? '+' + fmt(R.got) : '';
     $('shopBtn').classList.toggle('on', R.state === 'play' && R.shots === 0 && S.rounds > 0);
     $('ff').classList.toggle('on', waiting && R.sinceShot > 3.5);
+    if (desk) $('sheet').classList.toggle('live', shopLive());
   }
   requestAnimationFrame(frame);
 }
@@ -69,7 +89,7 @@ function runBot(n) {
 // Developer switches: ?bot=N (balance run), ?auto=N (pre-roll N seconds for a
 // screenshot), ?deep=N (start at depth N), ?show=title|intro|Notes|Deep|Set|note|shop,
 // ?buy=id,id (buy upgrades through the UI), ?cheat=code.
-fit(); addEventListener('resize', () => { if (fit() && R) { pool = makePool(); if (!R.shots && R.state !== 'intro') newRound(R.prev); } });
+fit(); syncDesk(); addEventListener('resize', () => { syncDesk(); if (fit() && R) { pool = makePool(); if (!R.shots && R.state !== 'intro') newRound(R.prev); } });
 if (+params.get('deep')) S.layer = S.deep = +params.get('deep');
 if (BOT) runBot(BOT);
 else {

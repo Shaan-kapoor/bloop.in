@@ -21,11 +21,11 @@ function countUp(el, to, pre = '') {
 
 // goo flies from one element to another, e.g. from your counter into the upgrade you bought
 function fly(from, to, n = 5) {
-  if (BOT || !from.animate) return; const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), h = stage.getBoundingClientRect();
+  if (BOT || !from.animate) return; const a = from.getBoundingClientRect(), b = to.getBoundingClientRect(), host = desk ? document.body : stage, h = host.getBoundingClientRect();
   for (let i = 0; i < n; i++) {
     const s = document.createElement('i'), x0 = a.left - h.left + a.height / 2, y0 = a.top - h.top + a.height / 2;
     const dx = b.left - h.left + b.width * rnd(.25, .75) - x0, dy = b.top - h.top + b.height / 2 - y0;
-    s.className = 'dot fly'; s.style.cssText = `left:${x0}px;top:${y0}px`; stage.appendChild(s);
+    s.className = 'dot fly'; s.style.cssText = `left:${x0}px;top:${y0}px`; host.appendChild(s);
     s.animate([{ transform: 'translate(0,0)' }, { transform: `translate(${dx * .5 + rnd(-40, 40)}px,${dy * .5 - rnd(10, 60)}px) scale(1.4)`, offset: .5 }, { transform: `translate(${dx}px,${dy}px) scale(.6)` }],
       { duration: 340 + i * 50, easing: 'cubic-bezier(.4,0,.7,1)' }).onfinish = () => s.remove();
   }
@@ -86,11 +86,11 @@ function fxPair(a, b) {
 const ui = {
   round() {
     if (BOT) return;
-    const th = (S.layer - 1) % THEMES.length; if (th !== theme) { theme = th; setTheme(th); }
+    const th = (S.layer - 1) % THEMES.length; if (th !== theme) { theme = th; setTheme(th); document.documentElement.style.setProperty('--zone', ZONE_TINT[th]); }
     $('depth').textContent = 'depth ' + String(S.layer).padStart(2, '0') + (S.pearls ? ' · ' + S.pearls + '◦' : '');
-    if (S.layer !== lastDepth) { if (lastDepth) { rebump($('depth'), 'flip'); zoneBanner(); } lastDepth = S.layer; }
+    if (S.layer !== lastDepth) { if (lastDepth) { rebump($('depth'), 'flip'); zoneBanner(); } lastDepth = S.layer; if (desk && $('tabNotes').classList.contains('on')) renderNotes(); }
     this.pips(); this.bar(); this.combo();
-    if (S.rounds === 0) { $('hint').textContent = 'drag to aim, let go to drop'; $('hint').classList.add('on'); }
+    if (S.rounds === 0) { $('hint').textContent = MOUSE ? 'move to aim, click to drop' : 'drag to aim, let go to drop'; $('hint').classList.add('on'); }
   },
   pips() { if (BOT) return; const n = Math.max(maxDrops(), R.left); $('pips').innerHTML = Array.from({ length: n }, (_, i) => `<i class="dot${i >= R.left ? ' used' : ''}"></i>`).join(''); },
   bar() { if (BOT) return; const rem = R.total - R.popped; $('bar').firstChild.style.width = (R.total ? R.popped / R.total * 100 : 0) + '%'; $('left').textContent = rem ? rem + (rem === 1 ? ' pod left' : ' pods left') : 'all popped!'; },
@@ -99,14 +99,14 @@ const ui = {
     if (R.combo >= 3) { c.innerHTML = R.combo + '<small>combo</small>'; c.classList.add('on'); rebump(c, 'bump'); }
     else c.classList.remove('on');
   },
-  shop() {
+  shop(quiet) {   // quiet: refresh the panel without sliding it open (desktop, where it is always in view)
     if (BOT) return; const p = R.prev, news = UP.filter(u => u.depth && open(u) && !S.seen[u.id]).map(u => u.name);
     $('resL').textContent = p ? 'this dive' : 'your goo';
     if (p) countUp($('resN'), p.got, '+'); else $('resN').textContent = fmt(S.goo);
     $('resS').innerHTML = !p ? 'spend it well' : p.cleared ? `<em>depth ${S.layer}: ${ZONES[(S.layer - 1) % ZONES.length]}</em>` + (news.length ? `<br>new: ${news.join(', ')}` : '')
       : p.left <= 3 ? `<em>${p.left} left. so close!</em><br>pop them all in one round` : `popped ${p.pct}% · best ${S.best}%<br>pop them all in one round`;
     this.tiles(); const box = $('cards'); box.scrollTop = 0; box.classList.add('enter'); setTimeout(() => box.classList.remove('enter'), 1100);
-    $('combo').classList.remove('on'); $('sheet').classList.add('open'); sfx.sheet(true);
+    $('combo').classList.remove('on'); if (!quiet) { $('sheet').classList.add('open'); sfx.sheet(true); }
   },
   tiles() {
     const box = $('cards'); box.innerHTML = ''; tileEls = {}; let i = 0;
@@ -219,12 +219,12 @@ $('menuX').onclick = () => menu.close();
 document.querySelectorAll('.tabs button').forEach(b => b.onclick = () => { sfx.tap(); menu.tab(b.dataset.tab); });
 
 function renderSet() {
-  document.querySelectorAll('.sw').forEach(b => b.classList.toggle('on', !!opt[b.dataset.opt]));
+  document.querySelectorAll('.sw[data-opt]').forEach(b => b.classList.toggle('on', !!opt[b.dataset.opt]));
   $('buzzNote').textContent = navigator.vibrate ? '' : "this device can't vibrate from a web page";
   if (document.activeElement !== $('nameIn')) $('nameIn').value = me().name;
   $('hearts').textContent = S.hearts ? heartLine(S.hearts) : 'tap the heart';
 }
-document.querySelectorAll('.sw').forEach(b => b.onclick = () => {
+document.querySelectorAll('.sw[data-opt]').forEach(b => b.onclick = () => {
   const k = b.dataset.opt; opt[k] = !opt[k]; b.classList.toggle('on', opt[k]); initAudio(); applyOpt(); save();
   sfx.flick(opt[k]); if (k === 'buzz' && opt.buzz) buzz(30);
 });
@@ -343,3 +343,30 @@ function runIntro() {
   $('story').onclick = e => { sfx.tap(); e.target.id === 'skip' ? end() : next(); };
   next();
 }
+
+// ── full screen ──
+const fsOn = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+const FS_OK = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen) && document.fullscreenEnabled !== false && !/iPhone|iPod/.test(navigator.userAgent);
+function toggleFs() {
+  if (!FS_OK) return; const d = document, e = d.documentElement; sfx.flick(!fsOn());
+  try { const p = fsOn() ? (d.exitFullscreen || d.webkitExitFullscreen).call(d) : (e.requestFullscreen || e.webkitRequestFullscreen).call(e); if (p && p.catch) p.catch(() => {}); } catch (_) {}
+}
+const fsSync = () => { $('fsSw').classList.toggle('on', fsOn()); $('fsBtn').classList.toggle('on', fsOn()); };
+document.addEventListener('fullscreenchange', fsSync); document.addEventListener('webkitfullscreenchange', fsSync);
+$('fsSw').onclick = $('fsBtn').onclick = () => { initAudio(); toggleFs(); };
+if (!FS_OK) { $('fsRow').style.display = 'none'; $('fsBtn').style.display = 'none'; }   // iPhones cannot do this from a web page
+
+// ── desktop layout ──
+// On a wide screen the play column is left exactly as it is on a phone. The
+// menu docks on its left and the upgrade sheet on its right, both always in
+// view, each with its own size unit so they stay at a comfortable scale.
+let desk = false;
+const MOUSE = matchMedia('(hover: hover) and (pointer: fine)').matches;
+function syncDesk() {
+  if (BOT) return; const side = (innerWidth - innerHeight / 1.6) / 2, on = side >= 300 && innerHeight >= 560, pw = Math.min(side, 440);
+  for (const id of ['sideL', 'sideR']) { $(id).style.setProperty('--pw', pw + 'px'); $(id).style.setProperty('--u', pw / 190 + 'px'); }
+  if (on === desk) return; desk = on; document.body.classList.toggle('desk', on);
+  (on ? $('sideL') : stage).appendChild($('menu')); (on ? $('sideR') : stage).appendChild($('sheet'));
+  if (on) { menu.tab('Notes'); if (R) ui.shop(true); } else $('menu').classList.remove('open');
+}
+const shopLive = () => R.state === 'shop' || R.state === 'play' && R.shots === 0;   // desktop: you may still buy until the first drop goes

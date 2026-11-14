@@ -31,6 +31,19 @@ Every depth you clear washes up a bottle with a note in it, signed "n". There ar
 
 From depth 8 you can drain the pool: start again from depth 1 with pearls that make all goo richer for good.
 
+## On a desktop
+
+On a wide screen the play column stays exactly as it is on a phone. The menu docks on its left and the upgrades on its right, both always in view. Move the mouse to aim and click to drop; clicking the water also starts the next round.
+
+| Key | What it does |
+| --- | --- |
+| space or enter | start the round, continue, close a note |
+| 1 to 9 | buy the first to ninth upgrade in the list |
+| shift (hold) | speed up the last drops |
+| f | full screen |
+
+Full screen is also a switch in settings on phones that allow it.
+
 ## The deep
 
 The menu has a board called "the deep" that shows how many players are at each depth and who has gone deepest. It is not a score table so much as a map of where everyone is.

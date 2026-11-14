@@ -93,7 +93,7 @@ function newRound(prev) {
     const can = UP.some(u => open(u) && lv(u.id) < u.max && cost(u) <= S.goo), news = UP.some(u => u.depth && open(u) && !S.seen[u.id]);
     if (BOT || can || news || prev.cleared || S.read < notesOpen()) R.state = 'shop'; else popup(GW / 2, GH * .42, '+' + fmt(prev.got), 'big');
   }
-  ui.round(); if (R.state === 'shop') ui.shop();
+  ui.round(); if (R.state === 'shop') ui.shop(); else if (desk) ui.shop(true);   // on desktop the upgrade panel is always in view
 }
 function startPlay() {
   for (const u of UP) if (open(u)) S.seen[u.id] = 1;
