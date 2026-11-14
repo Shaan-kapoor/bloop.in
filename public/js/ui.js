@@ -110,17 +110,17 @@ const ui = {
   },
   tiles() {
     const box = $('cards'); box.innerHTML = ''; tileEls = {}; let i = 0;
-    const wide = (cls, icon, head, sub, extra = '') => { const el = document.createElement('button'); el.className = 'wide ' + cls; el.style.setProperty('--i', i++); el.innerHTML = (icon ? `<img class="ico" src="${ico(icon)}" alt="">` : '') + `<span style="flex:1"><b>${head}</b><small>${sub}</small></span>${extra}`; box.appendChild(el); return el; };
-    if (S.read < notesOpen()) wide('bottle', 'bottle', 'a bottle bobbed up', "there's a note inside. tap to read it.").onclick = () => openNote(S.read);
+    const wide = (cls, icon, head, sub, extra = '') => { const el = document.createElement('button'); el.className = 'wide ' + cls; el.style.setProperty('--i', i++); el.innerHTML = (icon ? `<img class="ico" src="${ico(icon)}" alt="">` : '') + `<span class="tx"><span class="nm">${head}</span><span class="fx">${sub}</span></span>${extra}`; box.appendChild(el); return el; };
+    if (S.read < notesOpen()) wide('bottle', 'bottle', 'a note washed up', `note ${S.read + 1} of ${NOTES.length}`, '<em>read</em>').onclick = () => openNote(S.read);
     const isNew = u => u.depth && !S.seen[u.id], opened = UP.filter(open), locked = UP.filter(u => !open(u));
     for (const u of [...opened.filter(isNew), ...opened.filter(u => !isNew(u))]) {
       const el = document.createElement('button'); el.style.setProperty('--i', i++); el._new = isNew(u);
-      el.innerHTML = `<span class="top"><img class="ico" src="${ico(u.id)}" alt=""><span class="lv"></span></span><span class="nm">${u.name}${el._new ? '<i class="tag">new</i>' : ''}</span><span class="ds">${u.desc}</span><span class="fx"></span><span class="price"><i class="dot"></i><b></b><small></small></span>`;
+      el.innerHTML = `<img class="ico" src="${ico(u.id)}" alt=""><span class="tx"><span class="nm">${u.name}${el._new ? '<i class="tag">new</i>' : ''}</span>${el._new ? `<span class="ds">${u.desc}</span>` : ''}<span class="fx"></span></span><span class="price"><i class="dot"></i><b></b></span>`;
       holdToBuy(el, u); tileEls[u.id] = el; box.appendChild(el);
     }
-    if (locked.length) wide('locked', '', '? ? ?', `something new waits at depth ${locked[0].depth}`);
+    if (locked.length) wide('locked', '', '? ? ?', `something new at depth ${locked[0].depth}`);
     const pe = pearlsFor(S.layer);
-    if (pe > 0) wide('pearl', 'pearl', 'drain the pool', `start again from depth 1 with ${pe} pearl${pe > 1 ? 's' : ''}. each pearl: +50% goo, forever.`, '<em>drain</em>').onclick = () => {
+    if (pe > 0) wide('pearl', 'pearl', 'drain the pool', `restart with ${pe} pearl${pe > 1 ? 's' : ''} · +50% goo each`, '<em>drain</em>').onclick = () => {
       if (!confirm(`Start over from depth 1 and keep ${pe} pearl${pe > 1 ? 's' : ''}?`)) return;
       S = Object.assign(S, { goo: 0, layer: 1, best: 0, up: {}, seen: {}, sure: {}, pearls: S.pearls + pe }); save(); sfx.clear(); newRound({ got: 0, pct: 0, left: 9, cleared: true, combo: 0, total: 1 }); netDive(true);
     };
@@ -131,10 +131,8 @@ const ui = {
       const el = tileEls[u.id]; if (!el) continue;
       const l = lv(u.id), c = cost(u), maxed = l >= u.max, can = !maxed && S.goo >= c;
       el.className = `tile ${u.cat} ${maxed ? 'maxed' : can ? 'can' : 'poor'}${el._new ? ' fresh' : ''}`;
-      el.querySelector('.lv').innerHTML = u.max <= 7 ? Array.from({ length: u.max }, (_, k) => `<i class="${k < l ? 'f' : ''}${k === l - 1 && u.id === boughtId ? ' nu' : ''}"></i>`).join('') : 'lv ' + l;
       const [a, b] = fxPair(u.fx(l), u.fx(l + 1)); el.querySelector('.fx').innerHTML = maxed ? `<b>${u.fx(l)}</b>` : `${a}<i>→</i><b>${b}</b>`;
       el.querySelector('.price b').textContent = maxed ? 'max' : fmt(c);
-      el.querySelector('.price small').textContent = !maxed && !can && S.goo >= c * .5 ? fmt(c - S.goo) + ' to go' : '';
       el.style.setProperty('--p', maxed ? '100%' : Math.min(100, S.goo / c * 100) + '%');
       if (u.id === boughtId) rebump(el, 'hit');
     }
