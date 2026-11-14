@@ -105,39 +105,33 @@ canvas { position:absolute; inset:0; width:100%; height:100%; display:block; ima
 #resN { display:block; font:700 calc(var(--u)*20)/1 var(--font); }
 #resS { color:var(--ink2); text-align:right; font-size:calc(var(--u)*7); line-height:1.4; } #resS em { font-style:normal; font-weight:600; color:var(--ink); }
 #cards { flex:1; min-height:0; overflow-y:auto; -webkit-overflow-scrolling:touch; overscroll-behavior:contain; touch-action:pan-y; position:relative;
-         padding:0 calc(var(--u)*7) calc(var(--u)*5); display:grid; grid-template-columns:1fr 1fr; grid-auto-rows:max-content; gap:calc(var(--u)*3); align-content:start; }
+         padding:0 calc(var(--u)*7) calc(var(--u)*5); display:flex; flex-direction:column; gap:calc(var(--u)*2.4); }
 #cards.enter > * { animation:fadeUp .35s var(--out) both; animation-delay:calc(var(--i)*25ms); }
-.tile, .wide { background:var(--s2); border:var(--hair) solid var(--line); border-radius:calc(var(--u)*5); color:var(--ink); text-align:left; box-shadow:0 calc(var(--u)*1.4) 0 #04051a; }
-/* each tile is tinted by what it acts on: blue for the drop, violet for pods, gold for goo */
-.tile { --c:var(--blue); --p:0%; display:flex; flex-direction:column; align-items:flex-start; padding:calc(var(--u)*4.5);
-        background:linear-gradient(170deg, color-mix(in srgb, var(--c) 22%, var(--s2)), var(--s2) 64%); border-color:color-mix(in srgb, var(--c) 32%, var(--line)); }
-.tile.pod { --c:var(--violet); } .tile.goo { --c:var(--gold); }
-.tile .top { display:flex; width:100%; justify-content:space-between; align-items:flex-start; }
-.ico { flex:none; width:calc(var(--u)*19); height:calc(var(--u)*19); padding:calc(var(--u)*3); image-rendering:pixelated; border-radius:calc(var(--u)*5);
-       background:color-mix(in srgb, var(--c, var(--blue)) 24%, #05061a); box-shadow:inset 0 0 0 var(--hair) color-mix(in srgb, var(--c, var(--blue)) 50%, #0000); }
-.tile .lv { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:calc(var(--u)*1.2); max-width:55%; padding-top:calc(var(--u)*1); font:500 calc(var(--u)*6.2)/1 var(--font); letter-spacing:.1em; text-transform:uppercase; color:var(--ink3); }
-.tile .lv i { width:calc(var(--u)*3.2); height:calc(var(--u)*3.2); border-radius:50%; background:var(--line2); } .tile .lv i.f { background:var(--c); box-shadow:0 0 calc(var(--u)*2.2) var(--c); }
-.tile .lv i.nu { animation:pipin .4s var(--pop); }
-.tile .nm { margin-top:calc(var(--u)*3.5); font-weight:600; font-size:calc(var(--u)*9.2); line-height:1.2; display:flex; align-items:center; gap:calc(var(--u)*3); }
-.tile .ds { margin-top:calc(var(--u)*1); font-size:calc(var(--u)*6.8); line-height:1.3; color:var(--ink2); min-height:2.6em; }
-.tile .fx { margin-top:calc(var(--u)*3); font:500 calc(var(--u)*7)/1 var(--font); color:var(--ink3); white-space:nowrap; }
-.tile .fx b { color:var(--ink); font-weight:700; } .tile .fx i { font-style:normal; margin:0 calc(var(--u)*2); }
-.tile .price { margin-top:calc(var(--u)*4); width:100%; height:calc(var(--u)*19); border-radius:calc(var(--u)*5); display:flex; align-items:center; justify-content:center; gap:calc(var(--u)*2.5); font:700 calc(var(--u)*9.6)/1 var(--font); }
-.tile .price .dot { width:calc(var(--u)*5.4); height:calc(var(--u)*5.4); }
-.tile .price small { font:500 calc(var(--u)*5.6)/1 var(--font); color:var(--ink2); }
-.tile.can { border-color:color-mix(in srgb, var(--c) 75%, var(--line)); }
-.tile.can .price { background:linear-gradient(#a9dbff,var(--blue)); color:#04102e; box-shadow:0 calc(var(--u)*1.4) 0 #1f47c9; }
+/* One upgrade per row: icon, name, what it becomes, price. The stripe on the
+   left says what it acts on: blue for the drop, violet for pods, gold for goo. */
+.tile, .wide { --c:var(--blue); --p:0%; position:relative; flex:none; display:flex; align-items:center; gap:calc(var(--u)*4.5); min-height:calc(var(--u)*29); overflow:hidden;
+               padding:calc(var(--u)*3.5) calc(var(--u)*4) calc(var(--u)*3.5) calc(var(--u)*6.5); background:var(--s2); border:var(--hair) solid var(--line); border-radius:calc(var(--u)*5); color:var(--ink); text-align:left; }
+.tile::before, .wide::before { content:''; position:absolute; left:0; top:0; bottom:0; width:calc(var(--u)*2); background:var(--c); }
+.tile.pod { --c:var(--violet); } .tile.goo, .wide.pearl { --c:var(--gold); } .wide.bottle { --c:var(--sky); } .wide.locked { --c:var(--line2); }
+.ico { flex:none; width:calc(var(--u)*17); height:calc(var(--u)*17); padding:calc(var(--u)*2.5); image-rendering:pixelated; border-radius:calc(var(--u)*4.5); background:color-mix(in srgb, var(--c) 20%, #05061a); }
+.tx { flex:1; min-width:0; display:flex; flex-direction:column; gap:calc(var(--u)*1.6); }
+.nm { font-weight:600; font-size:calc(var(--u)*9.2); line-height:1.1; display:flex; align-items:center; gap:calc(var(--u)*3); }
+.ds { font-size:calc(var(--u)*6.8); line-height:1.25; color:var(--ink2); }
+.fx { font:500 calc(var(--u)*7.2)/1.2 var(--font); color:var(--ink3); } .tile .fx { white-space:nowrap; }
+.fx b { color:var(--ink); font-weight:700; } .fx i { font-style:normal; margin:0 calc(var(--u)*2); }
+.price, .wide em { flex:none; min-width:calc(var(--u)*36); height:calc(var(--u)*21); padding:0 calc(var(--u)*4); border-radius:calc(var(--u)*5); display:flex; align-items:center; justify-content:center; gap:calc(var(--u)*2.5);
+                   font:700 calc(var(--u)*9.4)/1 var(--font); font-style:normal; }
+.price .dot { width:calc(var(--u)*5.4); height:calc(var(--u)*5.4); }
+.tile.can { border-color:var(--line2); }
+.tile.can .price, .wide em { background:linear-gradient(#a9dbff,var(--blue)); color:#04102e; box-shadow:0 calc(var(--u)*1.4) 0 #1f47c9; }
 .tile.poor .nm, .tile.poor .ico { opacity:.6; }
-.tile.poor .price { color:var(--ink3); background:linear-gradient(90deg, var(--line2) var(--p), var(--line) var(--p)) bottom / 100% calc(var(--u)*1.2) no-repeat; } .tile.poor .price .dot { filter:saturate(.25); opacity:.7; }
-.tile.maxed .price { color:var(--gold); letter-spacing:.2em; text-transform:uppercase; font-weight:500; } .tile.maxed .price .dot { display:none; }
-.tile:active { transform:scale(.96); opacity:1; }
-.tile.hit { animation:press .35s var(--pop); } .tile.hit .price, .tile.hit .fx b { animation:flash .4s; } .tile.hit .ico { animation:hop .4s var(--out); } .tile.no { animation:shake .25s; }
+.tile.poor .price { color:var(--ink3); background:linear-gradient(90deg, var(--line2) var(--p), var(--line) var(--p)); } .tile.poor .price .dot { filter:saturate(.25); opacity:.7; }
+.tile.maxed .price { color:var(--gold); font-size:calc(var(--u)*7); letter-spacing:.14em; text-transform:uppercase; } .tile.maxed .price .dot { display:none; }
+.tile:active, .wide:active { transform:scale(.97); opacity:1; }
+.tile.hit { animation:press .35s var(--pop); } .tile.hit .ico { animation:hop .4s var(--out); } .tile.hit .price, .tile.hit .fx b { animation:flash .4s; } .tile.no { animation:shake .25s; }
 .tag { font-style:normal; color:var(--gold); }
-.wide { grid-column:1 / -1; display:flex; align-items:center; gap:calc(var(--u)*5); padding:calc(var(--u)*5); }
-.wide b { display:block; font-weight:600; font-size:calc(var(--u)*8.4); } .wide small { display:block; font-size:calc(var(--u)*6.8); line-height:1.3; color:var(--ink2); }
-.wide.locked { background:none; border-style:dashed; } .wide.locked b { font:500 calc(var(--u)*7)/1.6 var(--font); letter-spacing:.3em; color:var(--ink3); } .wide.locked small { color:var(--ink3); }
-.wide.bottle { border-color:var(--sky); }
-.wide.pearl { border-color:#ffc94466; } .wide.pearl em { flex:none; font:500 calc(var(--u)*6.2)/1 var(--font); letter-spacing:.14em; text-transform:uppercase; color:var(--gold); border:var(--hair) solid var(--gold); border-radius:calc(var(--u)*2); padding:calc(var(--u)*4) calc(var(--u)*5); }
+.wide.locked { background:none; border-style:dashed; min-height:calc(var(--u)*22); } .wide.locked .nm { color:var(--ink3); letter-spacing:.3em; }
+.wide.pearl em { background:linear-gradient(#fff3bf,var(--gold)); color:#4f2f0c; box-shadow:0 calc(var(--u)*1.4) 0 #d98a1c; }
 .spark { position:absolute; z-index:40; pointer-events:none; width:calc(var(--u)*2); height:calc(var(--u)*2); margin:calc(var(--u)*-1); background:var(--sky); animation:spark .5s var(--out) forwards; }
 .spark.h { width:auto; height:auto; background:none; color:var(--pink); font-size:calc(var(--u)*7); line-height:1; animation-duration:.8s; }
 #foot { flex:none; padding:calc(var(--u)*5) calc(var(--u)*7) calc(env(safe-area-inset-bottom) + var(--u)*6); border-top:var(--hair) solid var(--line); }
