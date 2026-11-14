@@ -186,7 +186,7 @@ function hitPod(b, p, nx, ny) {
 }
 
 function update(rdt) {
-  now += rdt;
+  now += rdt; if (titleOn) logoT += rdt;
   if (!R) return;
   if (R.freeze > 0) { R.freeze -= rdt; return; }
   let dt = rdt; if (R.slow > 0) { R.slow -= rdt; dt *= .3; }
@@ -231,7 +231,7 @@ function update(rdt) {
     if (d.x < 2) { d.x = 2; d.vx = Math.abs(d.vx); } else if (d.x > GW - 2) { d.x = GW - 2; d.vx = -Math.abs(d.vx); }
     if (d.y > pool.top(d.x) && d.vy > 0) {
       d.dead = true; R.haul += d.val; R.got += d.val; pool.splash(d.x, 16);
-      sfx.plop(R.plops++, d.x);
+      if (!d.mute) sfx.plop(R.plops++, d.x);
       if (d.big) popup(d.x, pool.top(d.x) - 8, '+' + fmt(d.val), 'gold');
     }
   }
@@ -265,9 +265,48 @@ function update(rdt) {
   }
 }
 
+// ── the wordmark, made of goo ──
+// Each letter is a few strokes laid down as a row of small balls, so the name
+// shades, merges and sways like everything else. The dot is Bloop.
+let titleOn = !BOT, logoT = 0;
+const LOGO = (() => {
+  const pts = [], k = 1.15, cx = 59.5;
+  const line = (g, x0, y0, x1, y1) => { const n = Math.ceil(Math.hypot(x1 - x0, y1 - y0) / 1.4); for (let i = 0; i <= n; i++) pts.push({ g, x: x0 + (x1 - x0) * i / n, y: y0 + (y1 - y0) * i / n }); };
+  const arc = (g, x, y, r, a0, a1) => { const n = Math.ceil(Math.abs(a1 - a0) * r / 1.4); for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; pts.push({ g, x: x + Math.cos(a) * r, y: y + Math.sin(a) * r }); } };
+  line(0, 0, -22, 0, 0); arc(0, 6, -6, 6, 0, TAU);                                          // b
+  line(1, 20, -22, 20, 0);                                                                  // l
+  arc(2, 34, -6, 6, 0, TAU);                                                                // o
+  arc(3, 54, -6, 6, 0, TAU);                                                                // o
+  line(4, 68, -12, 68, 9); arc(4, 74, -6, 6, 0, TAU);                                       // p
+  line(6, 101, -12, 101, 0); pts.push({ g: 6, x: 101, y: -18.5, r: 2.8 });                  // i
+  line(7, 109, -12, 109, 0); arc(7, 114, -7, 5, Math.PI, TAU); line(7, 119, -7, 119, 0);    // n
+  for (const p of pts) { p.x = (p.x - cx) * k; p.y *= k; }
+  return { pts, dot: { g: 5, x: (90.5 - cx) * k, y: -3.6 * k } };
+})();
+// where a ball of the wordmark is right now: letters drop in one after another, then sway
+function logoXY(p) {
+  const t = logoT - .3 - p.g * .09, fall = t < 0 ? 1 : Math.max(0, 1 - t / .45) ** 2;
+  return [GW / 2 + p.x, GH * .43 + p.y - fall * GH * .55 + Math.sin(now * 2 + p.x * .07) * .8];
+}
+function bloopXY() { const [x, y] = logoXY(LOGO.dot), h = now % 3.4; return [x, y - (h < .45 ? Math.sin(h / .45 * Math.PI) * 10 : 0)]; }   // Bloop can't sit still
+function drawLogo() {
+  for (const p of LOGO.pts) { const [x, y] = logoXY(p); if (y > -4) ball(x, y, p.r || 2.1); }
+  const [x, y] = bloopXY(); if (y > -6) { ball(x, y, 4.4); orb(x, y, 5.6); }
+}
+function logoPost() { const [x, y] = bloopXY(); if (y > 0) eyes(x, y - .5, 1, 0, 0, now % 3.6 < .13); }
+// the name lets go and rains into the pool; Bloop jumps in after it
+function dropLogo() {
+  if (!titleOn) return;
+  for (const p of LOGO.pts) { const [x, y] = logoXY(p); R.drops.push({ x, y, vx: rnd(-16, 16), vy: rnd(-60, 0) - p.g * 7, val: 0, ch: 0, r: 2, mute: Math.random() < .75 }); }
+  const [x, y] = bloopXY(); addBall(x, y, rnd(-15, 15), -130);
+  for (const p of R.pods) p.born = -(1.1 + Math.random() * .6);
+  titleOn = false;
+}
+
 function draw() {
   surf = true; pool.draw();
-  for (const p of R.pods) {
+  if (titleOn) drawLogo();
+  for (const p of titleOn ? [] : R.pods) {
     if (p.dead) continue;
     const k = clamp(p.born / .18, 0, 1), r = p.r * (1 + p.s) * (k < 1 ? k * (1.3 - .3 * k) : 1); if (r <= 0) continue;
     const pulse = p.type === 'bomb' ? Math.sin(now * 7) * .6 : 0;
@@ -283,7 +322,7 @@ function draw() {
   }
   // the tap: a gold pipe coming down from the top, with the next drop hanging from it
   slab(LX - 3, 0, 6, LY - 14, 2); ball(LX, LY - 11, 9, 2); ball(LX, LY - 4, 5, 2); orb(LX, LY - 11, 10);
-  if (R.left > 0 && R.state !== 'tally') {
+  if (R.left > 0 && R.state !== 'tally' && !titleOn) {
     const on = aim && !aim.cancel, grow = clamp(1 - R.cool / .22, .2, 1), a = on ? aim.a : Math.PI / 2, st = on ? 3 : 1 + Math.sin(now * 3) * .8;
     const r = (4 + lv('fat') * .7) * grow;
     ball(LX + Math.cos(a) * st, LY + 2 + Math.sin(a) * st, r); ball(LX, LY - 1, r * .7);
@@ -308,7 +347,7 @@ function post() {
     ctx.globalAlpha = 1;
   }
   for (const p of R.pods) {
-    if (p.dead || p.born < .18) continue; const x = Math.round(p.x + p.ox), y = Math.round(p.y + p.oy);
+    if (titleOn || p.dead || p.born < .18) continue; const x = Math.round(p.x + p.ox), y = Math.round(p.y + p.oy);
     if (p.type === 'bomb') { ctx.fillStyle = (now * 4 | 0) & 1 ? '#fff' : '#ffc944'; ctx.fillRect(x - 2, y, 5, 1); ctx.fillRect(x, y - 2, 1, 5); ctx.fillRect(x - 1, y - 1, 3, 3); continue; }
     const h = hits(p);
     if (h > 1) num(x + .5, y + .5, Math.min(99, h), p.type === 'gold' ? '#4f2f0c' : '#1c1147');
@@ -318,10 +357,11 @@ function post() {
       ctx.fillRect(x - 2 + lx, y - (sq ? 0 : 1), 1, sq ? 1 : 2); ctx.fillRect(x + 1 + lx, y - (sq ? 0 : 1), 1, sq ? 1 : 2);
     }
   }
+  if (titleOn) logoPost();
   for (const r of R.rings) ring(r.x, r.y, r.r, r.c);
   for (const s of R.sparks) { ctx.fillStyle = s.life > .2 ? '#ffffff' : '#b8e6ff'; ctx.fillRect(s.x | 0, s.y | 0, 1, 1); if (s.life > .3) { ctx.fillRect(s.x - 1 | 0, s.y | 0, 3, 1); ctx.fillRect(s.x | 0, s.y - 1 | 0, 1, 3); } }
   for (const b of R.balls) if (!b.mini) eyes(b.x, b.y - .5, 1, clamp(b.vx * .01, -1, 1), clamp(b.vy * .006, -1, 1), false);
-  if (R.left > 0 && R.state !== 'tally') {
+  if (R.left > 0 && R.state !== 'tally' && !titleOn) {
     const on = aim && !aim.cancel, a = on ? aim.a : Math.PI / 2; eyes(LX + Math.cos(a) * 2, LY + 1.5 + Math.sin(a) * 2, 1, 0, 0, now % 3.6 < .13, on);
     if (R.state === 'play') {
       if (on) preview(aim.a, true);

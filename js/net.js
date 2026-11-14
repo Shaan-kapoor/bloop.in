@@ -14,7 +14,7 @@ function me() {
   return { id: S.id, name: S.name, depth: S.layer, deep: S.deep, pearls: S.pearls };
 }
 async function netDive(force) {
-  if (!ONLINE) return; const t = Date.now(); if (!force && t - lastDive < 20000) return; lastDive = t;
+  if (!ONLINE || S.cheat) return; const t = Date.now();   // saves that used cheat codes stay off the board if (!force && t - lastDive < 20000) return; lastDive = t;
   try { const r = await fetch(API + '/dive', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(me()) }); if (r.ok) world = await r.json(); } catch (_) {}
 }
 async function netWorld() {

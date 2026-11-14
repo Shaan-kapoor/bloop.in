@@ -66,7 +66,8 @@ function runBot(n) {
 
 // ══════════════════════════ boot ══════════════════════════
 // Developer switches: ?bot=N (balance run), ?auto=N (pre-roll N seconds for a
-// screenshot), ?deep=N (start at depth N), ?show=title|intro|Notes|Deep|Set|note|shop.
+// screenshot), ?deep=N (start at depth N), ?show=title|intro|Notes|Deep|Set|note|shop,
+// ?buy=id,id (buy upgrades through the UI), ?cheat=code.
 fit(); addEventListener('resize', () => { if (fit() && R) { pool = makePool(); if (!R.shots && R.state !== 'intro') newRound(R.prev); } });
 if (+params.get('deep')) S.layer = S.deep = +params.get('deep');
 if (BOT) runBot(BOT);
@@ -77,8 +78,10 @@ else {
     document.documentElement.classList.add('still');
     for (let i = 0; i < 60 * (+params.get('auto') || 3) && R === me; i++) { autoFire(); update(1 / 60); }
     if (R !== me) for (let i = 0; i < 40; i++) update(1 / 60);
-    if (show !== 'title') { $('title').classList.add('off'); if (show === 'intro') runIntro(); else enterGame(); }
+    if (show === 'title') logoT = 9; else { titleOn = false; $('title').classList.add('off'); if (show === 'intro') runIntro(); else enterGame(); }
     if (show === 'shop' && R.state === 'play') { if (!R.prev) R.prev = { got: 1284, pct: 92, left: 2, cleared: false }; S.goo += 60; R.state = 'shop'; ui.shop(); }
+    if (params.get('buy')) for (const id of params.get('buy').split(',')) buy(UP.find(u => u.id === id));
+    if (params.get('cheat')) { $('cheatIn').value = params.get('cheat'); cheat(); }
     if (show === 'note') openNote(0);
     if (TABS[show]) menu.open(show);
   }
