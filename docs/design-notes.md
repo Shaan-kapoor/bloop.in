@@ -73,7 +73,36 @@ Numbers live in the `GRUMPS` table in `public/js/game.js` (`clip`, `gap`, `pace`
 A critic agent is asked for a ranked list of problems and fixes after each build. Its findings and what was done about them are recorded here.
 
 - Round 1 (earlier boss, before the duel): fights were waiting, the yawn took no skill, dumping drops skipped the mechanics, the companions were generic. All addressed, then the whole boss was rebuilt as the duel above.
-- Round 2 (the duel): requested, report pending.
+- Round 2 (the duel, build 23edb5d): verdict "a timed pinata, not a duel". Scores: PvP feel 3, satisfaction 5, clarity 4, rewards 4 (out of 10).
+
+#### Round 2 findings (critic's sims and reading of the code)
+
+1. **No opponent, only a timer with a face.** It throws on a fixed clock, ignores your drops, stops when you stop, and its only win (three yawns) resets every dive while your damage persists.
+2. **Yawn farming is infinite and free.** A hit in the yawn refunded the drop and armed a big one, and big x crit stacked to x9. Sim at depth 15: 54 crits from 57 shots in one dive, no yawns taken.
+3. **Dumping all drops switches it off.** It threw 1 to 2 of its drops before the player's were gone. Careful play was punished instead.
+4. **Late game the swarm deletes every drop**, and the grump depth was easier than the depths around it (depth 29 took 15 dives, depth 30 took 2 to 5).
+5. **Rewards small, late and unexplained.** From depth 15 the winning dive often paid less than the dive before it. A pearl means nothing at depth 5. Three companion perks were invisible stat bumps.
+6. **First-timer is told the wrong thing.** The hint pointed at popping drops, not the yawn, and vanished on the first shot. The z slots on Oom read as "asleep". "grum 0%" reads as health.
+7. **Mostly waiting.** Its drops crossed in 3 s or more; a random-aim dive moved the bar 2 to 5%.
+8. **A clash deleted the drop you aimed** for three specks of gold.
+9. **Knock-out either never comes or feels cheap** (10 of 11 yawns landed after the player had nothing left).
+10. **Violet on violet.** Its drops look like loose wall pods.
+11. **The wall is cover for it and a tax for you.** Its drops slipped through almost every time.
+12. **Bugs:** twin throws were not aimed where it scored; fat drops aimed with the wrong size; big drop did not pop a fat one; "throws faster" barely faster; silent stake recovery; regrow could land on a drop; pips promised parity and did not keep it.
+
+Critic's bold ideas: (A) copycat, it answers each throw with your own throw mirrored; (B) thick beats thin, a fresh drop turns its drop into one of yours; (C) the last yawn, a finishing shot that doubles the jackpot if it lands in the mouth.
+
+#### Round 2 plan (what is being built in answer)
+
+- **Answer-throws and copycat.** Every drop you let go is answered about a second later, often with your own shot mirrored. Dumping means a volley comes back with nothing left to stop it. Holding still is not safe either: it throws anyway after a few seconds.
+- **The bar moves both ways.** Each yawn Oom catches lets the grump doze back a little (a knock-out more). That is its lasting win.
+- **The wall is your shield.** Its drops now wear out in two knocks, so it needs a lane to score, and every lane you dig toward it is a lane for it.
+- **Thick beats thin.** Only drops you aimed can meet its drops. A fresh one turns its drop blue and it falls as yours; a worn one bursts.
+- **Yawn hit capped.** Triple damage, no stacking with a big drop; one refunded drop per dive; a crit perks Oom up, with a popup.
+- **The last yawn.** At zero it does not pop: one long yawn and one free big drop. Anywhere wakes it; in the mouth doubles the jackpot.
+- **Rewards.** Jackpot about six fields' worth, shown as one number. Grump i gives i + 1 pearls, and the sheet says what a pearl does. Every companion does something you can see, and each catches one of a later grump's drops per dive.
+- **Clarity.** Its things are pink. Hint appears at its first yawn and says to throw one in. The aim line turns gold when the shot will land in the mouth. A two-line scoreboard (grump, Oom) replaces the z slots. The stake is shown from the start.
+- **Tempo.** Faster drops, shorter gaps, less health, no late softening.
 
 ## Oom
 
