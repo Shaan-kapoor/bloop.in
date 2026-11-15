@@ -12,17 +12,17 @@
   h2 { margin:14px 0 2px; font-size:19px; } h2 b { color:#ffc944; } p { margin:0 0 8px; color:#a5a3cf; font-size:14.5px; } p b { color:#eeedf7; font-weight:600; }
   .beats { color:#6462a0; font-size:13px; letter-spacing:.04em; min-height:20px; margin-top:8px; }
 </style>
-<h1>Where does Bloop come from?</h1>
-<p class="lede">Three concepts for the thing at the top of the screen. Each plays its wordless intro on a loop: how the dropper got there, why it drips, and how Bloop wakes up. The moon is never shown: something off-screen is doing this, and the player only sees its effect. Who it is stays the notes’ secret. The last second of each loop shows what happens when you clear a depth.</p>
+<h1>Where does Bloop come from? Round two</h1>
+<p class="lede">Four new directions. The first three have no hardware at all: the dropper is water, ice or a creature. Each plays its wordless intro on a loop, and the last second shows what happens in play. The moon is never shown; only the notes say who “n” is.</p>
 <div class="row" id="row"></div>
 <script>
 const W = 180, H = 300, TAU = Math.PI * 2, LX = 90, LY = 62;
 const lerp = (a, b, t) => a + (b - a) * t, cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, ease = t => t * t * (3 - 2 * t);
 const seg = (t, a, b) => ease(cl((t - a) / (b - a)));   // 0 to 1 as t goes from a to b
 function kit(ctx) {
-  const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+  const al = a => { ctx.globalAlpha = a; }, R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
   const D = (x, y, r, c) => { ctx.fillStyle = c; for (let j = -Math.ceil(r); j <= r; j++) { const w = Math.sqrt(Math.max(0, r * r - j * j)); if (w > .3) ctx.fillRect(Math.round(x - w), Math.round(y + j), Math.round(w * 2), 1); } };
-  return { R, D,
+  return { R, D, al,
     sky(scroll = 0) { for (let y = 0; y < H; y += 4) R(0, y, W, 4, `rgb(${7 + y * .035 | 0},${8 + y * .035 | 0},${26 + y * .1 | 0})`);
       for (let i = 0; i < 40; i++) { const x = (i * 47) % W, y = ((i * 89 - scroll * (1 + i % 3) * .5) % H + H) % H; R(x, y, 1, 1, i % 4 ? '#3a3990' : '#8a8ae0'); } },
     pool(k) { if (k <= 0) return; ctx.globalAlpha = k; R(0, H - 14, W, 14, '#2f6cf0'); R(0, H - 14, W, 2, '#74bcff'); for (let x = 0; x < W; x += 9) R(x + Math.sin(performance.now() / 500 + x) * 2, H - 14, 4, 1, '#b8e6ff'); ctx.globalAlpha = 1; },
@@ -38,47 +38,51 @@ function ending(k, t, x, y0) {   // t counted from the moment the drop starts to
   if (fall < 1) k.drop(x, y, 5 * grow, wake, t > 2.8);
   else if (t < 6.6) for (let i = -2; i <= 2; i++) k.R(x + i * 5, H - 16 - (1 - (t - 6.1) * 2) * 6 * (3 - Math.abs(i)), 2, 2, '#b8e6ff');
 }
-const G = ['#fff3bf', '#ffc944', '#d98a1c', '#4f2f0c'];   // gold: light, body, shade, outline
+const B = ['#b8e6ff', '#3f8cff', '#2f6cf0', '#0a1a52'];   // blue: light, body, shade, outline
+const surface = (k, t, y, amp = 1) => { for (let x = 0; x < W; x += 6) k.R(x + Math.sin(t * 1.5 + x * .2) * 2 * amp, y + Math.sin(t + x * .1) * 1.2 * amp, 4, 1, '#3766b0'); };
 const CONCEPTS = [
-  { name: 'The tap that turns itself', tag: 'faucet',
-    story: '<b>Backstory.</b> A brass tap, left behind in a wall long after the house was gone. Nobody has turned it in a hundred years. Every night a pale light slides across the wall from somewhere above, the handle shifts a hair on its own, and one drop gets loose.<br><b>In play.</b> The handle ticks round a notch each time you drop. “Leaky tap” loosens it.<br><b>Reveal.</b> The late notes already say “a little of that tug is me”. The player sees a handle nobody is touching and wonders who. On the last note the view finally tilts up along the light, to its source.',
-    beats: ['an old tap in the dark', 'a pale light slides in from above', 'the handle turns by itself', 'a drop swells and wakes', 'it looks down', 'and lets go'],
+  { name: 'The roost', tag: 'no object at all',
+    story: '<b>Backstory.</b> Above the world hangs a second sea, upside down and perfectly still. Drops sleep along its underside like bats. Now and then something far away tugs at it, a ripple runs along the ceiling, and whichever drop it passes wakes up.<br><b>In play.</b> The sleepers are your drops for the round: you can count them. When one falls, the next shuffles to the middle. “+1 drop” adds a sleeper.<br><b>Reveal.</b> Nothing is shown but the ripple. Late notes say “a little of that tug is me”; the last note names who.',
+    beats: ['a still ceiling of water, drops asleep', 'a ripple runs along it', 'one more drop gathers', 'it wakes', 'it looks down', 'and lets go · the next one shuffles over'],
     draw(k, t) {
-      const moonIn = seg(t, 1, 3), beam = seg(t, 3, 4.5), turn = seg(t, 4, 5.5) * 1.6 + (t > 12.5 ? seg(t, 12.5, 13.5) * .8 : 0);
-      k.sky(); k.R(0, 0, W, 8, `rgba(184,230,255,${.16 * moonIn})`);
-      k.R(0, 0, 54, LY + 8, '#15153f'); for (let y = 6; y < LY + 8; y += 12) k.R(0, y, 54, 1, '#0d0e2b'); for (let y = 0, i = 0; y < LY + 8; y += 12, i++) k.R(14 + (i & 1) * 18, y, 1, 12, '#0d0e2b');   // the old wall
-      if (beam > 0) { k.R(0, 0, 0, 0, '#000'); for (let i = 0; i < 22 * beam; i++) k.R(lerp(170, 76, i / 22), lerp(0, LY - 22, i / 22), 1, 1, '#b8e6ff'); }
-      const bx = 54, by = LY - 14;   // tap: plate, level body, spout, handle
-      k.R(bx - 1, by - 5, 6, 18, G[3]); k.R(bx, by - 4, 4, 16, G[1]); k.R(bx + 4, by - 1, 30, 9, G[3]); k.R(bx + 4, by, 29, 7, G[1]); k.R(bx + 4, by, 29, 2, G[0]); k.R(bx + 4, by + 5, 29, 2, G[2]);
-      k.R(LX - 5, by + 6, 10, 9, G[3]); k.R(LX - 4, by + 6, 8, 8, G[1]); k.R(LX - 4, by + 6, 2, 8, G[0]); k.R(LX - 6, by + 13, 12, 3, G[3]); k.R(LX - 5, by + 13, 10, 2, G[2]);
-      k.R(bx + 15, by - 7, 4, 7, G[2]); const hw = Math.max(2, Math.abs(Math.cos(turn)) * 11); k.R(bx + 17 - hw - 1, by - 11, hw * 2 + 2, 5, G[3]); k.R(bx + 17 - hw, by - 10, hw * 2, 3, G[1]); k.R(bx + 17 - hw, by - 10, hw * 2, 1, G[0]);
-      ending(k, t - 5.5, LX, LY + 6);
+      k.sky(); const wave = lerp(-25, W + 25, cl((t - 1) / 3.6)), slide = t > 12 ? seg(t, 12, 13.5) : 0;
+      for (let x = 0; x < W; x++) { const h = 9 + Math.sin(x * .13 + t * 1.2) * 1.2 + Math.exp(-((x - wave) ** 2) / 90) * 3.5; k.R(x, 0, 1, h, B[1]); k.R(x, 0, 1, 3, B[2]); k.R(x, h - 2, 1, 1, '#74bcff'); k.R(x, h, 1, 1, B[3]); }
+      [22, 44, 66, 114, 136, 158].forEach((x, i) => k.drop(x > LX ? x - 24 * slide : x, 14 + Math.sin(t * 1.5 + i) * .6 + Math.exp(-((x - wave) ** 2) / 90) * 3, 4.5, .4));
+      ending(k, t - 4.6, LX, 13);
     } },
-  { name: 'The bucket on a thread', tag: 'bucket',
-    story: '<b>Backstory.</b> Someone above wants to know what is at the bottom, and cannot come down. So they lower a little bucket of water on a thread of pale light. The top of the thread is always off the screen. The bucket leaks. The leak is Bloop.<br><b>In play.</b> Clear a depth and the thread pays out: the bucket sinks, the world scrolls up. Going deeper finally has a picture.<br><b>Reveal.</b> “Who is holding the thread?” and “who is n?” become the same question. On the last note the view climbs the thread, all thirty depths, to the hand that holds it.',
-    beats: ['a thread of light comes down from nowhere', 'a bucket is on the end of it', 'the bucket settles and sloshes', 'it leaks: a drop wakes', 'it looks down', 'and lets go · then the thread pays out'],
+  { name: 'The thaw', tag: 'ice',
+    story: '<b>Backstory.</b> Bloop did not begin here. It was frozen into a piece of ice a very long time ago, somewhere cold, and the ice has been drifting ever since, carried by a current nobody steers. Tonight it reached warmer water.<br><b>In play.</b> The drops left in your round are frozen inside the ice, asleep. Each drop you use melts the ice a little. A fresh piece drifts in for the next round.<br><b>Reveal.</b> “Woke up” becomes literal. Who has been carrying the ice all this way? The tide. The last note says whose tide.',
+    beats: ['a piece of ice drifts in', 'drops are frozen inside it, asleep', 'the water here is warmer', 'one thaws and wakes', 'it looks down', 'and lets go · the ice melts a little'],
     draw(k, t) {
-      const down = seg(t, 1, 4), sink = t > 12.3 ? seg(t, 12.3, 13.8) : 0, y = lerp(-20, LY - 8, down), sw = Math.sin(t * 2.2) * 5 * (1 - seg(t, 4, 6.5)) * down;
-      k.sky(sink * 60);
-      for (let yy = 0; yy < y - 12; yy += 2) k.R(LX + sw * (yy / y) , yy, 1, 1, (yy / 2 | 0) % 2 ? '#eef4ff' : '#b8e6ff');   // the thread
-      const x = LX + sw;
-      for (let a = Math.PI; a <= TAU; a += .12) k.R(x + Math.cos(a) * 12, y - 10 + Math.sin(a) * 9, 1, 1, G[2]);   // handle
-      for (let j = 0; j <= 16; j++) { const w = 13 - j * .3; k.R(x - w - 1, y - 10 + j, w * 2 + 2, 1, G[3]); k.R(x - w, y - 10 + j, w * 2, 1, j < 2 ? '#74bcff' : G[1]); k.R(x - w, y - 10 + j, 3, 1, j < 2 ? '#b8e6ff' : G[0]); k.R(x + w - 3, y - 10 + j, 3, 1, j < 2 ? '#3f8cff' : G[2]); }
-      k.R(x - 9, y - 3, 18, 1, G[2]); k.R(x - 1, y + 6, 2, 2, '#0a1a52');   // band, and the hole
-      ending(k, t - 6, LX, LY + 2);
+      k.sky(); surface(k, t, 3);
+      const cx = lerp(-34, LX, seg(t, .4, 3)), top = 5 + Math.sin(t * 1.4) * 1.2, warm = seg(t, 3, 4.8), hgt = 42 - warm * 5 - (t > 12 ? seg(t, 12, 13.5) * 7 : 0);
+      k.R(0, 0, W, 6, `rgba(255,214,150,${.14 * warm})`); let w = 0;
+      for (let j = 0; j < hgt; j++) { w = 24 - Math.abs(j / 42 - .35) * 26 + ((j * 7) % 5 < 2 ? 1 : 0); const y = top + j; k.R(cx - w - 1, y - (j ? 0 : 1), w * 2 + 2, j ? 1 : 2, '#27508f'); k.R(cx - w, y, w * 2, 1, '#bfe2fa'); k.R(cx - w, y, w * .5, 1, '#eefaff'); k.R(cx + w - 4, y, 4, 1, '#86bde8'); }
+      k.R(cx - w - 1, top + hgt, w * 2 + 2, 1, '#27508f');
+      k.al(.7); k.drop(cx - 9, top + 12, 3.6, .4); k.drop(cx + 8, top + 19, 3.6, .4); if (t < 5.2) k.drop(cx, top + hgt - 8, 3.6, .4); k.al(1);
+      ending(k, t - 5.2, LX, top + hgt + 1);
     } },
-  { name: 'The tide shell', tag: 'shell',
-    story: '<b>Backstory.</b> A great golden shell is stuck to the roof of the world. It has been shut for longer than fish. Twice a day the water above brightens and leans, as if something were pulling it, the shell opens a crack, and one pearl of water slips out.<br><b>In play.</b> The shell opens a little for every drop and snaps shut when you run out.<br><b>Reveal.</b> When a late note says “I pull on every drop, twice a day”, the player recognises what they have watched at the top of the screen since the first second.',
-    beats: ['a shut shell, far above', 'the water brightens and leans', 'the shell opens a crack', 'a pearl of water wakes', 'it looks down', 'and lets go'],
+  { name: 'The old one', tag: 'a character',
+    story: '<b>Backstory.</b> The biggest, oldest drop there is has hung at the top of the world for so long that it is far too big to fall. It has always wanted to know what is down there. So it lets a little of itself go, and asks to be told.<br><b>In play.</b> It is a face, not a fixture: it watches each drop fall, winces at a miss, dozes while you shop. It gives the game someone to play for.<br><b>Reveal.</b> It never speaks. The notes come from somebody else, who has been watching the old one for a very long time, and that is how “n” knows Bloop’s name.',
+    beats: ['something huge, asleep', 'it opens its eyes', 'it lets a little of itself go', 'the little one wakes', 'they both look down', 'and it lets go'],
     draw(k, t) {
-      const rise = seg(t, 1, 3.2), open = seg(t, 3.4, 5.2) * .9 - (t > 12 ? seg(t, 12, 12.6) * .9 : 0);
-      k.sky(); k.R(0, 0, W, 10, `rgba(184,230,255,${.18 * rise})`);
-      for (let x = 0; x < W; x += 6) k.R(x + Math.sin(t * 1.5 + x * .2) * 2 * rise, 4 + Math.sin(t + x * .1) * 1.5 * rise, 4, 1, '#3766b0');   // the tide line
-      const cy = LY - 14, lid = (dir, o) => { for (let i = -18; i <= 18; i++) { const u = i / 18, h = Math.sqrt(1 - u * u) * 9; k.R(LX + i - .5, cy + dir * o - (dir < 0 ? h : 0), 2, h + 1, Math.abs(i) % 6 < 1 ? G[2] : G[1]); k.R(LX + i - .5, cy + dir * o + (dir < 0 ? -h - 1 : h), 2, 1, G[3]); } k.R(LX - 19, cy + dir * o - (dir < 0 ? 1 : 0), 38, 1, dir < 0 ? G[0] : G[2]); };
-      if (open > .05) { k.R(LX - 17, cy - open * 2, 34, open * 7, '#0a1a52'); k.D(LX, cy + 1, 3 * open, '#b8e6ff'); }
-      lid(-1, 1 + open * 2); lid(1, open * 5);
-      k.R(LX - 22, cy - 2, 5, 5, G[3]); k.R(LX - 21, cy - 1, 3, 3, G[2]);   // hinge
-      ending(k, t - 5.4, LX, LY + 2);
+      k.sky(); const r = 40 + Math.sin(t * 1.3) * .8 - (t > 12 ? seg(t, 12, 13.5) * 2 : 0), cy = -10, open = seg(t, 1.2, 2.8) > .5 && t < 11.8, dn = t > 8.2 ? 1 : 0;
+      k.D(LX, cy, r + 1.5, B[3]); k.D(LX, cy, r, B[2]); k.D(LX - 3, cy - 3, r - 4, B[1]); k.D(LX - 20, 9, 3.5, B[0]);
+      for (const s of [-1, 1]) { const ex = LX + s * 13; if (open) { k.R(ex - 1, 14 + dn, 3, 3, B[3]); k.R(ex - 1, 14 + dn, 1, 1, '#eef4ff'); } else k.R(ex - 2, 16, 5, 1, B[3]); }
+      k.R(LX - 3, 23, 6, 1, B[3]); k.R(LX - 4, 22, 1, 1, B[3]); k.R(LX + 3, 22, 1, 1, B[3]);
+      ending(k, t - 5.5, LX, cy + r + 1);
+    } },
+  { name: 'The paper boat', tag: 'a folded note',
+    story: '<b>Backstory.</b> Somebody folded a letter into a boat and set it on the water. It has drifted a long way and it is soaked through. What drips out of the bottom is water that has passed through the writing. That is why Bloop knows where to go.<br><b>In play.</b> The boat bobs on the surface and leans the way you aim. It gets soggier as your drops run out and dries between rounds.<br><b>Reveal.</b> The notes come in bottles; this one came as a boat, and you have been looking at it since the first second. After the last note the boat unfolds: it is note zero, the first one “n” ever sent.',
+    beats: ['a paper boat drifts in', 'there is writing on it', 'it is soaked through', 'a drop comes out of the paper and wakes', 'it looks down', 'and lets go'],
+    draw(k, t) {
+      k.sky(); const P = ['#fbf6e6', '#efe6cc', '#cdc2a2', '#4b4636'], sy = 26, x = lerp(-40, LX, seg(t, .4, 3.2)), b = Math.sin(t * 1.6) * 1.2, soak = seg(t, 3.4, 5.4);
+      for (let j = 0; j < 17; j++) { const w = j * .62, y = sy - 25 + j + b; k.R(x - w - 1, y, w * 2 + 2, 1, P[3]); k.R(x - w, y, w * 2, 1, P[2]); k.R(x - w, y, w, 1, P[0]); }
+      for (let j = 0; j < 15; j++) { const w = 24 - j * .6, y = sy - 8 + j + b, wet = j > 14 - soak * 8; k.R(x - w - 1, y, w * 2 + 2, 1, P[3]); k.R(x - w, y, w * 2, 1, wet ? '#9fb0c8' : j ? P[1] : P[0]); k.R(x + w - 4, y, 4, 1, wet ? '#8296b3' : P[2]); }
+      k.R(x - 16, sy + 7 + b, 32, 1, P[3]);
+      k.R(x - 14, sy - 5 + b, 10, 1, '#8a86a8'); k.R(x - 1, sy - 5 + b, 12, 1, '#8a86a8'); k.R(x - 12, sy - 2 + b, 17, 1, '#8a86a8');
+      surface(k, t, sy);
+      ending(k, t - 5.5, LX, sy + 9 + b);
     } },
 ];
 const LOOP = 14.5;
