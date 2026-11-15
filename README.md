@@ -30,9 +30,15 @@ Along the way:
 
 - **Seven zones** in rotation (the shallows, kelp forest, jelly gardens, open blue, the trench, moss caves, midnight water), each with its own water colour and ASCII wildlife swimming behind the pods.
 - **Oom.** A character, not a fixture: it dozes while you shop, watches every drop, winces at a miss and grins at a long chain.
-- **Grumps.** Every fifth depth a pod that has napped far too long is in the way (grum, snorl, glug, hush, knot, dooze). What you knock off it stays off between rounds. Every few drops it yawns, with the spot marked one drop ahead: land a drop in the yawn and it counts triple and earns a big drop; leave it and the huff costs you one. Wake a grump and it comes along for good, each with a trick of its own.
+- **Grumps.** Every fifth depth is a duel with a pod that has napped far too long (grum, snorl, glug, hush, knot, dooze). It floats in the pool and plays your own game back at you, upside down, through a wall of pods that is in your way and is also your shield.
+  - Every drop you let go, it answers, often with your own shot mirrored. Its drops are pink and float up.
+  - Each one that reaches Oom is a yawn: the grump dozes back a little and the dive's goo is worth less. Three yawns and Oom nods off.
+  - A fresh drop of yours turns one of its drops into one of yours.
+  - After each handful it has to yawn. A drop in the yawn counts triple, and the aim line turns gold when a shot will land there.
+  - What you knock off stays off between dives. At the very end it gives one last long yawn: land the last drop in it and the jackpot doubles.
+  - Wake a grump and it leaves pearls, comes along for good with a trick of its own, and catches one drop a dive from every grump after it.
 - **Thirty notes in bottles**, one for each depth you clear, signed "n". Together they tell a story.
-- **Pearls.** From depth 8 you can drain the pool: start again from depth 1 with pearls that make all goo richer for good.
+- **Pearls.** Every pearl makes all goo richer for good. Grumps sleep on them, and from depth 8 you can drain the pool: start again from depth 1 with more.
 - **The deep.** A shared board in the menu showing how many players are at each depth and who has gone deepest.
 - **Save codes.** Progress is kept in the browser; settings can export it as a code and load one back.
 
@@ -78,7 +84,7 @@ Plain HTML, CSS and JavaScript. No build step, no framework, no image or sound f
 | `public/js/util.js` | small helpers |
 | `functions/api/[[path]].js` | the API behind the deep |
 | `wrangler.toml` | Cloudflare configuration |
-| `docs/` | screenshots for this README |
+| `docs/` | screenshots for this README, and `design-notes.md`: why things are the way they are |
 | `archive/` | earlier prototypes, kept for reference |
 
 ## Running it
@@ -120,7 +126,8 @@ Add these to the URL.
 | `?buy=drops,power` | with `auto`: buys upgrades through the UI |
 | `?cheat=gloop` | with `auto`: enters a cheat code |
 | `?pals=3` | sets how many grumps ride along |
-| `?bhp=14` | grump toughness, for balance runs |
+| `?bhp=10` | grump toughness, for balance runs |
+| `?wit=.4&hold=1.5` | with `bot`: how often the bot aims at the grump, and how long it waits between drops in a duel |
 
 ## Cheat codes
 
