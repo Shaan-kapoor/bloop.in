@@ -9,6 +9,7 @@ A gloopy, slightly retro incremental game. Aim a drop of goo, pop the pods, spen
 <p>
   <img src="docs/title.png" width="190" alt="Title screen: the name drawn in goo">
   <img src="docs/play.png" width="190" alt="A round in the jelly gardens">
+  <img src="docs/grump.png" width="190" alt="Grum, the first grump, with its ring of pods">
   <img src="docs/upgrades.png" width="190" alt="The upgrade list">
   <img src="docs/note.png" width="190" alt="A note from a bottle">
 </p>
@@ -17,9 +18,9 @@ A gloopy, slightly retro incremental game. Aim a drop of goo, pop the pods, spen
 
 ## The game
 
-Bloop is a drip that woke up at an old tap and looked down. Everyone says there is a sea at the bottom.
+At the top of the world hangs Oom, the oldest drop there is, far too big to fall. Bloop is the little bit of Oom that looked down. Everyone says there is a sea at the bottom.
 
-1. **Aim.** Touch anywhere and the shot points from the tap toward your finger. A dotted line shows the exact path.
+1. **Aim.** Touch anywhere and the shot points from Oom toward your finger. A dotted line shows the exact path.
 2. **Drop.** Let go. The drop bounces through the pods. Each pod shows how many hits it still needs.
 3. **Collect.** Popped pods burst into goo that rains into the pool. That is your haul.
 4. **Upgrade.** Spend the haul. Fifteen upgrades unlock as you go deeper, and each one changes something you can see on the board.
@@ -28,6 +29,8 @@ Bloop is a drip that woke up at an old tap and looked down. Everyone says there 
 Along the way:
 
 - **Seven zones** in rotation (the shallows, kelp forest, jelly gardens, open blue, the trench, moss caves, midnight water), each with its own water colour and ASCII wildlife swimming behind the pods.
+- **Oom.** A character, not a fixture: it dozes while you shop, watches every drop, winces at a miss and grins at a long chain.
+- **Grumps.** Every fifth depth a pod that has napped far too long is in the way (grum, snorl, glug, hush, knot, dooze). What you knock off it stays off between rounds. Every few drops it yawns, with the spot marked one drop ahead: land a drop in the yawn and it counts triple and earns a big drop; leave it and the huff costs you one. Wake a grump and it comes along for good, each with a trick of its own.
 - **Thirty notes in bottles**, one for each depth you clear, signed "n". Together they tell a story.
 - **Pearls.** From depth 8 you can drain the pool: start again from depth 1 with pearls that make all goo richer for good.
 - **The deep.** A shared board in the menu showing how many players are at each depth and who has gone deepest.
@@ -116,6 +119,8 @@ Add these to the URL.
 | `?fakeworld` | fills the deep with sample data |
 | `?buy=drops,power` | with `auto`: buys upgrades through the UI |
 | `?cheat=gloop` | with `auto`: enters a cheat code |
+| `?pals=3` | sets how many grumps ride along |
+| `?bhp=14` | grump toughness, for balance runs |
 
 ## Cheat codes
 

@@ -73,7 +73,7 @@ function runBot(n) {
     const me = R, h0 = (R.pods.reduce((a, p) => a + hits(p), 0) / R.total).toFixed(1), L = S.layer; let steps = 0;
     R.state = 'play'; R.left = maxDrops(); R.value = fieldValue();
     while (R === me && steps++ < 60 * 120) {
-      if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .7) { const live = R.pods.filter(p => !p.dead), p = live[Math.random() * live.length | 0]; fire(clamp((p ? Math.atan2(p.y - LY, p.x - LX) : 1.57) + rnd(-.12, .12), .3, 2.84)); }
+      if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .7 && !(R.boss && !R.boss.dead && R.balls.some(b => !b.mini))) { const live = R.pods.filter(p => !p.dead), p = live[Math.random() * live.length | 0]; fire(clamp((p ? Math.atan2(p.y - LY, p.x - LX) : 1.57) + rnd(-.12, .12), .3, 2.84)); }
       update(1 / 60);
     }
     if (R === me) { log.push(`r${k + 1} STUCK ${R.state} left=${R.left} balls=${R.balls.length} drops=${R.drops.length}`); newRound({ got: 0, pct: 0, left: 9 }); }
@@ -91,6 +91,7 @@ function runBot(n) {
 // ?buy=id,id (buy upgrades through the UI), ?cheat=code.
 fit(); syncDesk(); addEventListener('resize', () => { syncDesk(); if (fit() && R) { pool = makePool(); if (!R.shots && R.state !== 'intro') newRound(R.prev); } });
 if (+params.get('deep')) S.layer = S.deep = +params.get('deep');
+if (params.has('pals')) S.pals = +params.get('pals');
 if (BOT) runBot(BOT);
 else {
   newRound(); shownGoo = S.goo; showTitle();

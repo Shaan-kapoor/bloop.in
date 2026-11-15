@@ -72,7 +72,7 @@ const icons = {}, ico = id => icons[id] || (icons[id] = makeIcon(ICON[id]));
 const notesOpen = () => S.moon ? NOTES.length : Math.min(NOTES.length, S.deep - 1);
 function zoneBanner() {
   if (BOT || stage.classList.contains('cine')) return;
-  $('zone').innerHTML = `<small>depth ${S.layer}</small>${ZONES[theme]}`; rebump($('zone'), 'on'); sfx.zone();
+  const G = grumpAt(S.layer); $('zone').innerHTML = `<small>depth ${S.layer}${S.layer % 5 === 4 ? ' · something is snoring below' : ''}</small>${G ? G.name + ' is in the way' : ZONES[theme]}`; rebump($('zone'), 'on'); sfx.zone();
 }
 // "3 drops" and "4 drops" read better as "3 → 4 drops"
 function fxPair(a, b) {
@@ -93,7 +93,10 @@ const ui = {
     if (S.rounds === 0) { $('hint').textContent = MOUSE ? 'move to aim, click to drop' : 'drag to aim, let go to drop'; $('hint').classList.add('on'); }
   },
   pips() { if (BOT) return; const n = Math.max(maxDrops(), R.left); $('pips').innerHTML = Array.from({ length: n }, (_, i) => `<i class="dot${i >= R.left ? ' used' : ''}"></i>`).join(''); },
-  bar() { if (BOT) return; const rem = R.total - R.popped; $('bar').firstChild.style.width = (R.total ? R.popped / R.total * 100 : 0) + '%'; $('left').textContent = rem ? rem + (rem === 1 ? ' pod left' : ' pods left') : 'all popped!'; },
+  bar() {
+    if (BOT) return;
+    if (R.boss) { const b = R.boss, fr = b.dead ? 0 : b.hp / b.max; $('bar').firstChild.style.width = (1 - fr) * 100 + '%'; $('left').textContent = b.dead ? b.boss.name + ' is awake!' : `${b.boss.name} · ${Math.floor((1 - fr) * 100)}%`; return; }
+    const rem = R.total - R.popped; $('bar').firstChild.style.width = (R.total ? R.popped / R.total * 100 : 0) + '%'; $('left').textContent = rem ? rem + (rem === 1 ? ' pod left' : ' pods left') : 'all popped!'; },
   combo() {
     if (BOT) return; const c = $('combo');
     if (R.combo >= 3) { c.innerHTML = R.combo + '<small>combo</small>'; c.classList.add('on'); rebump(c, 'bump'); }
@@ -104,7 +107,7 @@ const ui = {
     $('resL').textContent = p ? 'this dive' : 'your goo';
     if (p) countUp($('resN'), p.got, '+'); else $('resN').textContent = fmt(S.goo);
     $('resS').innerHTML = !p ? 'spend it well' : p.cleared ? `<em>depth ${S.layer}: ${ZONES[(S.layer - 1) % ZONES.length]}</em>` + (news.length ? `<br>new: ${news.join(', ')}` : '')
-      : p.left <= 3 ? `<em>${p.left} left. so close!</em><br>pop them all in one round` : `popped ${p.pct}% · best ${S.best}%<br>pop them all in one round`;
+      : p.boss ? `<em>${p.boss} is ${p.pct}% awake</em><br>what you knock off stays off` : p.left <= 3 ? `<em>${p.left} left. so close!</em><br>pop them all in one round` : `popped ${p.pct}% · best ${S.best}%<br>pop them all in one round`;
     this.tiles(); const box = $('cards'); box.scrollTop = 0; box.classList.add('enter'); setTimeout(() => box.classList.remove('enter'), 1100);
     $('combo').classList.remove('on'); if (!quiet) { $('sheet').classList.add('open'); sfx.sheet(true); }
   },
@@ -122,7 +125,7 @@ const ui = {
     const pe = pearlsFor(S.layer);
     if (pe > 0) wide('pearl', 'pearl', 'drain the pool', `restart with ${pe} pearl${pe > 1 ? 's' : ''} · +50% goo each`, '<em>drain</em>').onclick = () => {
       if (!confirm(`Start over from depth 1 and keep ${pe} pearl${pe > 1 ? 's' : ''}?`)) return;
-      S = Object.assign(S, { goo: 0, layer: 1, best: 0, up: {}, seen: {}, sure: {}, pearls: S.pearls + pe }); save(); sfx.clear(); newRound({ got: 0, pct: 0, left: 9, cleared: true, combo: 0, total: 1 }); netDive(true);
+      S = Object.assign(S, { goo: 0, layer: 1, best: 0, boss: null, up: {}, seen: {}, sure: {}, pearls: S.pearls + pe }); save(); sfx.clear(); newRound({ got: 0, pct: 0, left: 9, cleared: true, combo: 0, total: 1 }); netDive(true);
     };
     this.refresh();
   },
@@ -322,22 +325,23 @@ function showTitle() {
     setTimeout(() => S.intro ? enterGame() : runIntro(), 1400);
   };
 }
-// The opening: a drip wakes up at the tap. It ends by handing the first round to the player.
+// The opening has no words. Oom sleeps, wakes, strains twice to fall and is far too big,
+// so it lets a little of itself go instead. It ends by handing the first round to the player.
 function runIntro() {
-  const pods = R.pods; let i = -1, timer = 0, drip = 0, done = false;
-  R.pods = []; R.left = 0; R.state = 'intro'; stage.classList.add('cine', 'story'); $('story').classList.add('on');
-  const say = (text, big) => { const c = $('cap'); let k = 0; c.className = big ? 'big' : ''; c.innerHTML = text.split('\n').map(l => l.split(' ').map(w => `<span style="--i:${k++}">${w}</span>`).join(' ')).join('<br>'); };
+  const pods = R.pods; let i = -1, timer = 0, done = false;
+  R.pods = []; R.left = 0; R.state = 'intro'; oom.nap = true; stage.classList.add('cine', 'story'); $('story').classList.add('on'); $('cap').textContent = '';
   const steps = [
-    { t: 'far above everything,\nan old tap drips.', d: 3600, on() { drip = setInterval(() => { if (R.state === 'intro') addBall(LX, LY + 6, rnd(-10, 10), 20, { mini: true }); }, 650); } },
-    { t: 'one day, a drip woke up\nand looked down.', d: 3600, on() { clearInterval(drip); R.left = 1; R.cool = .22; sfx.letter(2); } },
-    { t: 'this is bloop.', big: true, d: 2800, on() { arpeggio(5, 4, 110); } },
-    { t: "they say there's a sea down there.\nfar, far down.", d: 3800, on() { for (let x = 10; x < GW; x += 20) pool.splash(x, 60); sfx.sink(GW / 2, true); } },
-    { t: 'the way is full of sleepy pods.', d: 3400, on() { R.pods = pods; for (const p of pods) p.born = -(.1 + Math.random() * .9); arpeggio(0, 8, 120); } },
-    { t: 'wake them up.\nthey love to come along.', d: 3200 },
+    { d: 2400 },
+    { d: 2000, on() { oom.nap = false; sfx.letter(2); } },
+    { d: 1500, on() { oom.v = 130; oom.strain = 1; sfx.sink(LX, true); } },
+    { d: 2000, on() { oom.v = 170; oom.strain = 1.5; sfx.sink(LX, true); } },
+    { d: 2600, on() { R.left = 1; R.cool = .9; oom.joy = 1.3; arpeggio(5, 4, 110); } },
+    { d: 2600, on() { addBall(LX + 12, LY, 5, 10, { mini: true }); } },   // a crumb of it falls first: far below, there is water
+    { d: 2800, on() { R.pods = pods; for (const p of pods) p.born = -(.1 + Math.random() * .9); arpeggio(0, 8, 120); } },
   ];
-  const next = () => { clearTimeout(timer); if (done) return; if (++i >= steps.length) return end(); const s = steps[i]; say(s.t, s.big); s.on && s.on(); timer = setTimeout(next, s.d); };
+  const next = () => { clearTimeout(timer); if (done) return; if (++i >= steps.length) return end(); const s = steps[i]; s.on && s.on(); timer = setTimeout(next, s.d); };
   const end = () => {
-    if (done) return; done = true; clearTimeout(timer); clearInterval(drip); if (!R.pods.length) R.pods = pods;
+    if (done) return; done = true; clearTimeout(timer); oom.nap = false; if (!R.pods.length) R.pods = pods;
     S.intro = 1; save(); R.state = 'play'; R.left = maxDrops(); R.cool = .4; R.shots = 0; $('story').onclick = null; enterGame();
   };
   $('story').onclick = e => { sfx.tap(); e.target.id === 'skip' ? end() : next(); };

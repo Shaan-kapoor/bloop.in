@@ -119,7 +119,7 @@ function drawCritters(dt) {
   }
 }
 let surf = false; const orbs = [];
-const orb = (x, y, R) => orbs.push({ x, y, R, R2: R * R });
+const orb = (x, y, R, matt) => orbs.push({ x, y, R, R2: R * R, matt });   // matt: sphere shading without the glint
 
 function render(dt) {
   const d = f.getImageData(0, 0, GW, GH).data, W = GW, H = GH;
@@ -169,7 +169,7 @@ function render(dt) {
           const nd = (-.6 * dx - .8 * dy) / o.R + dz * .3;
           t = nd > .52 ? 4 : nd > .02 ? 3 : nd > -.5 ? 2 : 1;
           const hx = dx + .36 * o.R, hy = dy + .42 * o.R, hr = .2 * o.R;
-          if (hx * hx + hy * hy * 1.6 < hr * hr) t = 6;
+          if (!o.matt && hx * hx + hy * hy * 1.6 < hr * hr) t = 6;
           break;
         }
       }
