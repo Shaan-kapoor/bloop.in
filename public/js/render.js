@@ -120,6 +120,10 @@ function drawCritters(dt) {
 }
 let surf = false; const orbs = [];
 const orb = (x, y, R, matt) => orbs.push({ x, y, R, R2: R * R, matt });   // matt: sphere shading without the glint
+// violet goo inside a tint circle is drawn pink: the colour of everything the grump throws
+const PINK = ['#4a1238', '#a8327f', '#cf4fa6', '#ea6fc0', '#ff9fdc', '#ffd3ee', '#ffffff'].map(abgr), tints = [];
+const tint = (x, y, R) => tints.push({ x, y, R2: R * R });
+const tinted = (x, y) => { for (const t of tints) { const dx = x - t.x, dy = y - t.y; if (dx * dx + dy * dy < t.R2) return true; } return false; };
 
 function render(dt) {
   const d = f.getImageData(0, 0, GW, GH).data, W = GW, H = GH;
@@ -146,11 +150,11 @@ function render(dt) {
       if (o < 0 && x < W - 1) { q = p + 4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
       if (o < 0 && y > 0) { q = p - W4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
       if (o < 0 && y < H - 1) { q = p + W4; if (d[q] >= T) o = 0; else if (d[q + 1] >= T) o = 1; else if (d[q + 2] >= T) o = 2; }
-      if (o >= 0) o32[i] = PAL[o][0];
+      if (o >= 0) o32[i] = (o === 1 && tints.length && tinted(x, y) ? PINK : PAL[o])[0];
       else if (x >= 2 && y >= 3) { q = p - sh; if (d[q] >= T || d[q + 1] >= T || d[q + 2] >= T) o32[i] = bgSh[i]; }
       continue;
     }
-    const pc = p + c, v = d[pc], P = PAL[c], dz = BAY[(y & 3) << 2 | (x & 3)] / 16 - .5;
+    const pc = p + c, v = d[pc], P = c === 1 && tints.length && tinted(x, y) ? PINK : PAL[c], dz = BAY[(y & 3) << 2 | (x & 3)] / 16 - .5;
     const gx = (x < W - 2 ? d[pc + 8] : v) - (x > 1 ? d[pc - 8] : v);
     const gy = (y < H - 2 ? d[pc + 2 * W4] : v) - (y > 1 ? d[pc - 2 * W4] : v);
     const b = (.6 * gx + .8 * gy) / (Math.sqrt(gx * gx + gy * gy) + 20) + dz * .28;

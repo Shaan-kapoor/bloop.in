@@ -4,7 +4,7 @@ Working notes for bloop.in: what each idea is, why it was chosen, what was rejec
 
 ## The grump duel (in progress)
 
-**Status:** built and playable, not yet tuned or reviewed. README still describes the older boss and must be updated when this settles.
+**Status:** second build (answer-throws, two-way bar, last yawn, pink drops, companions that catch) is in and passes the bot. A third critic round is next. README still describes the older boss and must be updated when this settles.
 
 ### The brief
 
@@ -103,6 +103,16 @@ Critic's bold ideas: (A) copycat, it answers each throw with your own throw mirr
 - **Rewards.** Jackpot about six fields' worth, shown as one number. Grump i gives i + 1 pearls, and the sheet says what a pearl does. Every companion does something you can see, and each catches one of a later grump's drops per dive.
 - **Clarity.** Its things are pink. Hint appears at its first yawn and says to throw one in. The aim line turns gold when the shot will land in the mouth. A two-line scoreboard (grump, Oom) replaces the z slots. The stake is shown from the start.
 - **Tempo.** Faster drops, shorter gaps, less health, no late softening.
+
+#### Round 2 build: what changed from the plan, and first numbers
+
+- The grump's push-back is capped at where the dive began. It can take back this dive's progress, never an earlier dive's, so a weak player cannot go backwards. Each yawn gives it back 3%.
+- It does not answer your last drop: the last word is yours. A paced player can answer everything; a player who dumps five gets four back with nothing to stop them.
+- Holding still for 2.5 s makes it throw anyway.
+- Jackpot is (4 + drops left) fields' worth, doubled by a mouth finish, then the stake applies.
+- Companion perks, all visible: grum two little drops, snorl first drop goes out as two, glug first drop is big, hush a gold pod every dive, knot last drop is big, dooze one more drop. Each also catches one grump drop per dive.
+- Sims at depth 5 with a weak build (2 extra drops, punch 3): aiming at grum at a steady pace wakes it in 3 dives; dumping takes 5 to 7 dives and is knocked out most dives; random aim at pods moves it 5 to 10% a dive; perfect yawn shots wake it in one dive.
+- Balance bot with normal purchases: no stuck rounds; each grump takes 1 to 5 dives of 10 to 30 s.
 
 ## Oom
 

@@ -45,10 +45,10 @@ let last = performance.now(), uiT = 0, gooSeen = 0;
 function frame(t) {
   const dt = Math.min(1 / 30, (t - last) / 1000); last = t;
   if (AUTO) autoFire();
-  const waiting = R.state === 'play' && R.left === 0 && R.balls.length + R.foes.length > 0;
+  const waiting = R.state === 'play' && R.left === 0 && (R.balls.length + R.foes.length > 0 || !!R.boss && R.boss.owe > 0);
   for (let k = held && waiting ? 3 : 1; k > 0; k--) update(dt);   // hold a finger down to hurry the last drops along
   f.globalCompositeOperation = 'source-over'; f.fillStyle = '#000'; f.fillRect(0, 0, GW, GH);
-  f.globalCompositeOperation = 'lighter'; orbs.length = 0;
+  f.globalCompositeOperation = 'lighter'; orbs.length = 0; tints.length = 0;
   draw(); render(dt); post();
   shakeAmt *= Math.pow(.0005, dt);
   cv.style.transform = shakeAmt > .3 ? `translate(${rnd(-1, 1) * shakeAmt}px,${rnd(-1, 1) * shakeAmt}px)` : '';
@@ -57,7 +57,7 @@ function frame(t) {
   if ((uiT -= dt) <= 0) {
     uiT = .1;
     if (Math.round(shownGoo) > gooSeen) rebump($('goo'), 'bump'); gooSeen = Math.round(shownGoo);
-    $('haul').textContent = R.got > 0 && R.state !== 'shop' ? '+' + fmt(R.got) + (stake() > 1 ? ' ×' + stake() : '') : '';
+    $('haul').textContent = R.got > 0 && R.state !== 'shop' ? '+' + fmt(R.got) : '';
     $('shopBtn').classList.toggle('on', R.state === 'play' && R.shots === 0 && S.rounds > 0);
     $('ff').classList.toggle('on', waiting && R.sinceShot > 3.5);
     if (desk) $('sheet').classList.toggle('live', shopLive());
