@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>bloop.in · dropper concepts</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  body { margin:0; padding:28px 20px 60px; background:#07081a; color:#eeedf7; font:500 16px/1.45 Fredoka, system-ui, sans-serif; }
+  h1 { margin:0 0 4px; font-size:26px; } .lede { margin:0 0 26px; color:#a5a3cf; max-width:760px; }
+  .row { display:flex; gap:22px; flex-wrap:wrap; }
+  .card { width:300px; } canvas { width:300px; height:500px; image-rendering:pixelated; display:block; border:1px solid #3a3b78; border-radius:8px; background:#0c0d26; }
+  h2 { margin:14px 0 2px; font-size:19px; } h2 b { color:#ffc944; } p { margin:0 0 8px; color:#a5a3cf; font-size:14.5px; } p b { color:#eeedf7; font-weight:600; }
+  .beats { color:#6462a0; font-size:13px; letter-spacing:.04em; min-height:20px; margin-top:8px; }
+</style>
+<h1>Where does Bloop come from?</h1>
+<p class="lede">Three concepts for the thing at the top of the screen. Each plays its wordless intro on a loop: how the dropper got there, why it drips, and how Bloop wakes up. The last second of each loop shows what happens when you clear a depth.</p>
+<div class="row" id="row"></div>
+<script>
+const W = 180, H = 300, TAU = Math.PI * 2, LX = 90, LY = 62;
+const lerp = (a, b, t) => a + (b - a) * t, cl = (v, a = 0, b = 1) => v < a ? a : v > b ? b : v, ease = t => t * t * (3 - 2 * t);
+const seg = (t, a, b) => ease(cl((t - a) / (b - a)));   // 0 to 1 as t goes from a to b
+function kit(ctx) {
+  const R = (x, y, w, h, c) => { ctx.fillStyle = c; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h)); };
+  const D = (x, y, r, c) => { ctx.fillStyle = c; for (let j = -Math.ceil(r); j <= r; j++) { const w = Math.sqrt(Math.max(0, r * r - j * j)); if (w > .3) ctx.fillRect(Math.round(x - w), Math.round(y + j), Math.round(w * 2), 1); } };
+  return { R, D,
+    sky(scroll = 0) { for (let y = 0; y < H; y += 4) R(0, y, W, 4, `rgb(${7 + y * .035 | 0},${8 + y * .035 | 0},${26 + y * .1 | 0})`);
+      for (let i = 0; i < 40; i++) { const x = (i * 47) % W, y = ((i * 89 - scroll * (1 + i % 3) * .5) % H + H) % H; R(x, y, 1, 1, i % 4 ? '#3a3990' : '#8a8ae0'); } },
+    moon(x, y, r, glow) { ctx.globalAlpha = .12 + .1 * glow; D(x, y, r + 6, '#b8e6ff'); ctx.globalAlpha = 1; D(x, y, r, '#eef4ff'); D(x - r * .3, y - r * .2, r * .22, '#c9d6f5'); D(x + r * .35, y + r * .3, r * .16, '#c9d6f5'); },
+    pool(k) { if (k <= 0) return; ctx.globalAlpha = k; R(0, H - 14, W, 14, '#2f6cf0'); R(0, H - 14, W, 2, '#74bcff'); for (let x = 0; x < W; x += 9) R(x + Math.sin(performance.now() / 500 + x) * 2, H - 14, 4, 1, '#b8e6ff'); ctx.globalAlpha = 1; },
+    pods(k) { if (k <= 0) return; ctx.globalAlpha = k; for (let r = 0; r < 4; r++) for (let c = 0; c < 4 - (r & 1); c++) { const x = 45 + c * 30 + (r & 1) * 15, y = 140 + r * 24; D(x, y + 1, 8, '#1c1147'); D(x, y, 7, '#7a66ea'); D(x - 2, y - 2, 2.2, '#d6ceff'); R(x - 3, y, 1, 1, '#1c1147'); R(x + 2, y, 1, 1, '#1c1147'); } ctx.globalAlpha = 1; },
+    drop(x, y, r, eyes, lookDown) { if (r <= .5) return; D(x, y + .5, r + 1, '#0a1a52'); D(x, y, r, '#3f8cff'); D(x - r * .35, y - r * .35, r * .3, '#b8e6ff'); if (eyes > 0 && r > 3) { const h = eyes > .5 ? 2 : 1, d = lookDown ? 1 : 0; R(x - 2, y - 1 + d, 1, h, '#0a1a52'); R(x + 1, y - 1 + d, 1, h, '#0a1a52'); } },
+  };
+}
+// Every concept shares the ending: the drop swells, wakes, looks down, the pods and pool appear, it lets go.
+function ending(k, t, x, y0) {   // t counted from the moment the drop starts to form
+  const grow = seg(t, 0, 1.6), wake = t > 2 ? (t % 1.3 < .12 && t < 3.6 ? .4 : 1) : 0, fall = cl((t - 5) / 1.1);
+  k.pods(seg(t, 3, 4.4)); k.pool(seg(t, 3.4, 4.6));
+  const y = y0 + grow * 3 + fall * fall * (H - 30 - y0);
+  if (fall < 1) k.drop(x, y, 5 * grow, wake, t > 2.8);
+  else if (t < 6.6) for (let i = -2; i <= 2; i++) k.R(x + i * 5, H - 16 - (1 - (t - 6.1) * 2) * 6 * (3 - Math.abs(i)), 2, 2, '#b8e6ff');
+}
+const G = ['#fff3bf', '#ffc944', '#d98a1c', '#4f2f0c'];   // gold: light, body, shade, outline
+const CONCEPTS = [
+  { name: 'The moon’s tap', tag: 'faucet',
+    story: '<b>Backstory.</b> A brass tap, left behind in a wall long after the house was gone. Nobody has turned it in a hundred years. Every night the moon passes, its pull nudges the handle a hair, and one drop gets loose.<br><b>In play.</b> The handle ticks round a notch each time you drop. “Leaky tap” loosens it.<br><b>Reveal.</b> The late notes already say “a little of that tug is me”. On the final clue, the handle turns in a visible moonbeam.',
+    beats: ['an old tap in the dark', 'the moon comes out', 'its light turns the handle', 'a drop swells and wakes', 'it looks down', 'and lets go'],
+    draw(k, t) {
+      const moonIn = seg(t, 1, 3), beam = seg(t, 3, 4.5), turn = seg(t, 4, 5.5) * 1.6 + (t > 12.5 ? seg(t, 12.5, 13.5) * .8 : 0);
+      k.sky(); k.moon(150, 26 - (1 - moonIn) * 40, 9, beam);
+      k.R(0, 0, 54, LY + 8, '#15153f'); for (let y = 6; y < LY + 8; y += 12) k.R(0, y, 54, 1, '#0d0e2b'); for (let y = 0, i = 0; y < LY + 8; y += 12, i++) k.R(14 + (i & 1) * 18, y, 1, 12, '#0d0e2b');   // the old wall
+      if (beam > 0) { k.R(0, 0, 0, 0, '#000'); for (let i = 0; i < 22 * beam; i++) k.R(lerp(144, 76, i / 22), lerp(30, LY - 22, i / 22), 1, 1, '#b8e6ff'); }
+      const bx = 54, by = LY - 14;   // tap: plate, level body, spout, handle
+      k.R(bx - 1, by - 5, 6, 18, G[3]); k.R(bx, by - 4, 4, 16, G[1]); k.R(bx + 4, by - 1, 30, 9, G[3]); k.R(bx + 4, by, 29, 7, G[1]); k.R(bx + 4, by, 29, 2, G[0]); k.R(bx + 4, by + 5, 29, 2, G[2]);
+      k.R(LX - 5, by + 6, 10, 9, G[3]); k.R(LX - 4, by + 6, 8, 8, G[1]); k.R(LX - 4, by + 6, 2, 8, G[0]); k.R(LX - 6, by + 13, 12, 3, G[3]); k.R(LX - 5, by + 13, 10, 2, G[2]);
+      k.R(bx + 15, by - 7, 4, 7, G[2]); const hw = Math.max(2, Math.abs(Math.cos(turn)) * 11); k.R(bx + 17 - hw - 1, by - 11, hw * 2 + 2, 5, G[3]); k.R(bx + 17 - hw, by - 10, hw * 2, 3, G[1]); k.R(bx + 17 - hw, by - 10, hw * 2, 1, G[0]);
+      ending(k, t - 5.5, LX, LY + 6);
+    } },
+  { name: 'The bucket on a moonbeam', tag: 'bucket',
+    story: '<b>Backstory.</b> The moon wants to know what is at the bottom, and cannot come down. So it lowers a little bucket of water on a thread of its own light, as far as the thread will go. The bucket leaks. The leak is Bloop.<br><b>In play.</b> Clear a depth and the thread pays out: the bucket sinks, the world scrolls up. Going deeper finally has a picture.<br><b>Reveal.</b> The notes are signed “n” and come from above. The answer was hanging over your head the whole time: follow the thread up.',
+    beats: ['the moon, alone', 'it lowers a bucket on a thread of light', 'the bucket settles and sloshes', 'it leaks: a drop wakes', 'it looks down', 'and lets go · then the thread pays out'],
+    draw(k, t) {
+      const down = seg(t, 1, 4), sink = t > 12.3 ? seg(t, 12.3, 13.8) : 0, y = lerp(-20, LY - 8, down), sw = Math.sin(t * 2.2) * 5 * (1 - seg(t, 4, 6.5)) * down;
+      k.sky(sink * 60); k.moon(LX, 16 - sink * 22, 10, down);
+      for (let yy = 26 - sink * 22; yy < y - 12; yy += 2) k.R(LX + sw * (yy / y) , yy, 1, 1, (yy / 2 | 0) % 2 ? '#eef4ff' : '#b8e6ff');   // the thread
+      const x = LX + sw;
+      for (let a = Math.PI; a <= TAU; a += .12) k.R(x + Math.cos(a) * 12, y - 10 + Math.sin(a) * 9, 1, 1, G[2]);   // handle
+      for (let j = 0; j <= 16; j++) { const w = 13 - j * .3; k.R(x - w - 1, y - 10 + j, w * 2 + 2, 1, G[3]); k.R(x - w, y - 10 + j, w * 2, 1, j < 2 ? '#74bcff' : G[1]); k.R(x - w, y - 10 + j, 3, 1, j < 2 ? '#b8e6ff' : G[0]); k.R(x + w - 3, y - 10 + j, 3, 1, j < 2 ? '#3f8cff' : G[2]); }
+      k.R(x - 9, y - 3, 18, 1, G[2]); k.R(x - 1, y + 6, 2, 2, '#0a1a52');   // band, and the hole
+      ending(k, t - 6, LX, LY + 2);
+    } },
+  { name: 'The tide shell', tag: 'shell',
+    story: '<b>Backstory.</b> A great golden shell is stuck to the roof of the world. It has been shut for longer than fish. Twice a day the moon pulls the tide, the shell opens a crack, and one pearl of water slips out.<br><b>In play.</b> The shell opens a little for every drop and snaps shut when you run out.<br><b>Reveal.</b> “I pull on every drop, twice a day” stops being a riddle: you have been watching it happen at the top of the screen.',
+    beats: ['a shut shell, far above', 'the moon rises and the tide leans', 'the shell opens a crack', 'a pearl of water wakes', 'it looks down', 'and lets go'],
+    draw(k, t) {
+      const rise = seg(t, 1, 3.2), open = seg(t, 3.4, 5.2) * .9 - (t > 12 ? seg(t, 12, 12.6) * .9 : 0);
+      k.sky(); k.moon(34, 44 - rise * 22, 8, rise);
+      for (let x = 0; x < W; x += 6) k.R(x + Math.sin(t * 1.5 + x * .2) * 2 * rise, 4 + Math.sin(t + x * .1) * 1.5 * rise, 4, 1, '#3766b0');   // the tide line
+      const cy = LY - 14, lid = (dir, o) => { for (let i = -18; i <= 18; i++) { const u = i / 18, h = Math.sqrt(1 - u * u) * 9; k.R(LX + i - .5, cy + dir * o - (dir < 0 ? h : 0), 2, h + 1, Math.abs(i) % 6 < 1 ? G[2] : G[1]); k.R(LX + i - .5, cy + dir * o + (dir < 0 ? -h - 1 : h), 2, 1, G[3]); } k.R(LX - 19, cy + dir * o - (dir < 0 ? 1 : 0), 38, 1, dir < 0 ? G[0] : G[2]); };
+      if (open > .05) { k.R(LX - 17, cy - open * 2, 34, open * 7, '#0a1a52'); k.D(LX, cy + 1, 3 * open, '#b8e6ff'); }
+      lid(-1, 1 + open * 2); lid(1, open * 5);
+      k.R(LX - 22, cy - 2, 5, 5, G[3]); k.R(LX - 21, cy - 1, 3, 3, G[2]);   // hinge
+      ending(k, t - 5.4, LX, LY + 2);
+    } },
+];
+const LOOP = 14.5;
+for (const c of CONCEPTS) {
+  const card = document.createElement('div'); card.className = 'card';
+  card.innerHTML = `<canvas width="${W}" height="${H}"></canvas><div class="beats"></div><h2>${c.name} <b>· ${c.tag}</b></h2><p>${c.story}</p>`;
+  document.getElementById('row').appendChild(card); c.k = kit(card.querySelector('canvas').getContext('2d')); c.b = card.querySelector('.beats');
+}
+const t0 = performance.now(), fixed = +new URLSearchParams(location.search).get('t');
+(function frame() {
+  const t = fixed || ((performance.now() - t0) / 1000) % LOOP;
+  for (const c of CONCEPTS) { c.draw(c.k, t); c.b.textContent = '· ' + c.beats[Math.min(5, t < 3 ? 0 : t < 4.2 ? 1 : t < 5.6 ? 2 : t < 8.4 ? 3 : t < 10.8 ? 4 : 5)]; }
+  requestAnimationFrame(frame);
+})();
+</script>
+</html>
