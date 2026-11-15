@@ -72,7 +72,7 @@ const icons = {}, ico = id => icons[id] || (icons[id] = makeIcon(ICON[id]));
 const notesOpen = () => S.moon ? NOTES.length : Math.min(NOTES.length, S.deep - 1);
 function zoneBanner() {
   if (BOT || stage.classList.contains('cine')) return;
-  const G = grumpAt(S.layer); $('zone').innerHTML = `<small>depth ${S.layer}${S.layer % 5 === 4 ? ' · something is snoring below' : ''}</small>${G ? G.name + ' is in the way' : ZONES[theme]}`; rebump($('zone'), 'on'); sfx.zone();
+  const G = grumpAt(S.layer); $('zone').innerHTML = `<small>depth ${S.layer}${S.layer % 5 === 4 ? ' · something is snoring below' : ''}</small>${G ? 'oom vs ' + G.name : ZONES[theme]}`; rebump($('zone'), 'on'); sfx.zone();
 }
 // "3 drops" and "4 drops" read better as "3 → 4 drops"
 function fxPair(a, b) {
@@ -90,7 +90,8 @@ const ui = {
     $('depth').textContent = 'depth ' + String(S.layer).padStart(2, '0') + (S.pearls ? ' · ' + S.pearls + '◦' : '');
     if (S.layer !== lastDepth) { if (lastDepth) { rebump($('depth'), 'flip'); zoneBanner(); } lastDepth = S.layer; if (desk && $('tabNotes').classList.contains('on')) renderNotes(); }
     this.pips(); this.bar(); this.combo();
-    if (S.rounds === 0) { $('hint').textContent = MOUSE ? 'move to aim, click to drop' : 'drag to aim, let go to drop'; $('hint').classList.add('on'); }
+    if (R.boss && !pal(0) && R.state === 'play') { $('hint').textContent = 'its drops make oom yawn. pop them!'; $('hint').classList.add('on'); }
+    else if (S.rounds === 0) { $('hint').textContent = MOUSE ? 'move to aim, click to drop' : 'drag to aim, let go to drop'; $('hint').classList.add('on'); }
   },
   pips() { if (BOT) return; const n = Math.max(maxDrops(), R.left); $('pips').innerHTML = Array.from({ length: n }, (_, i) => `<i class="dot${i >= R.left ? ' used' : ''}"></i>`).join(''); },
   bar() {
@@ -106,8 +107,9 @@ const ui = {
     if (BOT) return; const p = R.prev, news = UP.filter(u => u.depth && open(u) && !S.seen[u.id]).map(u => u.name);
     $('resL').textContent = p ? 'this dive' : 'your goo';
     if (p) countUp($('resN'), p.got, '+'); else $('resN').textContent = fmt(S.goo);
-    $('resS').innerHTML = !p ? 'spend it well' : p.cleared ? `<em>depth ${S.layer}: ${ZONES[(S.layer - 1) % ZONES.length]}</em>` + (news.length ? `<br>new: ${news.join(', ')}` : '')
-      : p.boss ? `<em>${p.boss} is ${p.pct}% awake</em><br>what you knock off stays off` : p.left <= 3 ? `<em>${p.left} left. so close!</em><br>pop them all in one round` : `popped ${p.pct}% · best ${S.best}%<br>pop them all in one round`;
+    $('resS').innerHTML = !p ? 'spend it well' : p.won ? `<em>${p.won.name} is awake · +1 pearl</em><br>` + (p.won.gift ? `${p.won.name} comes along: ${p.won.gift}` : `woken in ${p.won.dives} dive${p.won.dives > 1 ? 's' : ''}`)
+      : p.cleared ? `<em>depth ${S.layer}: ${ZONES[(S.layer - 1) % ZONES.length]}</em>` + (news.length ? `<br>new: ${news.join(', ')}` : '')
+      : p.boss ? `<em>${p.out ? 'oom nodded off · ' : ''}${p.boss} is ${p.pct}% awake</em><br>what you knock off stays off` : p.left <= 3 ? `<em>${p.left} left. so close!</em><br>pop them all in one round` : `popped ${p.pct}% · best ${S.best}%<br>pop them all in one round`;
     this.tiles(); const box = $('cards'); box.scrollTop = 0; box.classList.add('enter'); setTimeout(() => box.classList.remove('enter'), 1100);
     $('combo').classList.remove('on'); if (!quiet) { $('sheet').classList.add('open'); sfx.sheet(true); }
   },

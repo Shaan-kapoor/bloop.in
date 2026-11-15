@@ -45,7 +45,7 @@ let last = performance.now(), uiT = 0, gooSeen = 0;
 function frame(t) {
   const dt = Math.min(1 / 30, (t - last) / 1000); last = t;
   if (AUTO) autoFire();
-  const waiting = R.state === 'play' && R.left === 0 && R.balls.length > 0;
+  const waiting = R.state === 'play' && R.left === 0 && R.balls.length + R.foes.length > 0;
   for (let k = held && waiting ? 3 : 1; k > 0; k--) update(dt);   // hold a finger down to hurry the last drops along
   f.globalCompositeOperation = 'source-over'; f.fillStyle = '#000'; f.fillRect(0, 0, GW, GH);
   f.globalCompositeOperation = 'lighter'; orbs.length = 0;
@@ -57,7 +57,7 @@ function frame(t) {
   if ((uiT -= dt) <= 0) {
     uiT = .1;
     if (Math.round(shownGoo) > gooSeen) rebump($('goo'), 'bump'); gooSeen = Math.round(shownGoo);
-    $('haul').textContent = R.got > 0 && R.state !== 'shop' ? '+' + fmt(R.got) : '';
+    $('haul').textContent = R.got > 0 && R.state !== 'shop' ? '+' + fmt(R.got) + (stake() > 1 ? ' ×' + stake() : '') : '';
     $('shopBtn').classList.toggle('on', R.state === 'play' && R.shots === 0 && S.rounds > 0);
     $('ff').classList.toggle('on', waiting && R.sinceShot > 3.5);
     if (desk) $('sheet').classList.toggle('live', shopLive());
@@ -68,19 +68,19 @@ function frame(t) {
 function autoFire() { if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .8) { fire(rnd(.3, .7) * Math.PI); aim = R.left > 0 ? { a: 1.1 } : null; } }
 // headless balance bot: plays N rounds with rough aim and buys the cheapest thing
 function runBot(n) {
-  const log = []; let secs = 0; newRound();
+  const log = [], BOTWIT = +params.get('wit') || 0, HOLD = +params.get('hold') || 0; let secs = 0; newRound();
   for (let k = 0; k < n; k++) {
     const me = R, h0 = (R.pods.reduce((a, p) => a + hits(p), 0) / R.total).toFixed(1), L = S.layer; let steps = 0;
     R.state = 'play'; R.left = maxDrops(); R.value = fieldValue();
     while (R === me && steps++ < 60 * 120) {
-      if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .7 && !(R.boss && !R.boss.dead && R.balls.some(b => !b.mini))) { const live = R.pods.filter(p => !p.dead), p = live[Math.random() * live.length | 0]; fire(clamp((p ? Math.atan2(p.y - LY, p.x - LX) : 1.57) + rnd(-.12, .12), .3, 2.84)); }
-      update(1 / 60);
+      if (R.state === 'play' && R.left > 0 && R.cool <= 0 && R.t > .7 && (!R.boss || R.sinceShot > HOLD || !R.shots)) { const live = R.pods.filter(p => !p.dead), p = R.foes.length && Math.random() < BOTWIT ? R.foes[0] : R.boss && !R.boss.dead && Math.random() < BOTWIT ? R.boss : live[Math.random() * live.length | 0]; if (!me.shots) me.T = 0; fire(clamp((p ? Math.atan2(p.y - LY, p.x - LX) : 1.57) + rnd(-.12, .12), .3, 2.84)); }
+      update(1 / 60); me.T = (me.T || 0) + 1 / 60;
     }
     if (R === me) { log.push(`r${k + 1} STUCK ${R.state} left=${R.left} balls=${R.balls.length} drops=${R.drops.length}`); newRound({ got: 0, pct: 0, left: 9 }); }
     secs += steps / 60 + 5;
     const p = R.prev, bought = [];
     for (;;) { const c = UP.filter(u => open(u) && lv(u.id) < u.max && cost(u) <= S.goo).sort((a, b) => cost(a) - cost(b))[0]; if (!c) break; buy(c); bought.push(c.id); }
-    log.push(`r${k + 1} h=${h0} t=${(secs / 60).toFixed(1)}m L${L}${p.cleared ? '*' : ''} pods=${me.total} pop=${p.pct}% combo=${p.combo} got=${p.got} goo=${S.goo} buy=${bought.join(',')}`);
+    log.push(`r${k + 1} h=${h0} t=${(secs / 60).toFixed(1)}m L${L}${p.cleared ? '*' : ''} pods=${me.total} pop=${p.pct}%${me.boss ? ` z=${me.doze}${me.out ? '!' : ''} pops=${me.pops} thr=${me.thrown} fz=${me.fizzled} wd=${me.wide} T=${(me.T || 0).toFixed(0)}s` : ''} combo=${p.combo} got=${p.got} goo=${S.goo} buy=${bought.join(',')}`);
   }
   $('botlog').textContent = log.join('\n');
 }

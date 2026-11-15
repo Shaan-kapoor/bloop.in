@@ -62,6 +62,9 @@ const sfx = {
   fizz() { noise(.18, .04, { type: 'highpass', f: 2500, f2: 7000 }); tone(500, .12, .03, { to: 1.6 }); },
   skip() { tone(260, .28, .13, { to: 2.2 }); noise(.2, .05, { type: 'lowpass', f: 1400, f2: 300 }); },
   split() { tone(note(7), .2, .09, { from: .5 }); tone(note(9), .2, .08, { from: .5, at: .05 }); },
+  spit(x) { tone(170, .3, .12, { from: 1.7, glide: .16, pan: pan(x) }); noise(.12, .03, { f: 500, f2: 1800 }); },
+  nib(x) { tone(150, .09, .05, { to: .7, pan: pan(x) }); },
+  yawn() { tone(392, .7, .08, { type: 'triangle', to: .5, att: .12 }); tone(196, .7, .05, { to: .5, at: .05, att: .1 }); },
   boom() { tone(95, .55, .3, { to: .32 }); tone(240, .35, .16, { to: .3, type: 'triangle' }); noise(.45, .24, { type: 'lowpass', f: 2600, f2: 200 }); },
   buy(l) { const k = 3 + Math.min(l, 10);   // a run of purchases climbs the scale
     tone(note(k), .3, .1, { type: 'triangle' }); tone(note(k) * 1.5, .4, .08, { type: 'triangle', at: .08 }); tone(note(k) * 2, .6, .07, { type: 'triangle', at: .16 }); noise(.3, .02, { type: 'highpass', f: 6000, at: .16 }); },
